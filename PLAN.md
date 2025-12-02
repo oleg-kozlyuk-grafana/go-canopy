@@ -125,7 +125,7 @@ canopy/
   - Environment variable support
   - Version and help commands
 
-- [ ] **1.4** Create HTTP server framework (`internal/server/`)
+- [x] **1.4** Create HTTP server framework (`internal/server/`)
   - Basic server setup with graceful shutdown
   - Middleware: logging, recovery, request ID
   - Health check endpoint
