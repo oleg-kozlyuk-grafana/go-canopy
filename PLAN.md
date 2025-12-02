@@ -196,7 +196,7 @@ canopy/
   - Bucket existence check
   - Error handling
 
-- [ ] **3.4** Write storage tests
+- [x] **3.4** Write storage tests
   - Test save/get cycle
   - Test not-found scenarios
   - Test error handling

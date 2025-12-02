@@ -37,15 +37,25 @@ build:
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
-## test: Run all tests
+## test: Run all tests (excluding integration tests)
 test:
 	@echo "Running tests..."
-	$(GOTEST) -v -race ./...
+	$(GOTEST) -v -race -short ./...
+
+## test-integration: Run integration tests
+test-integration:
+	@echo "Running integration tests..."
+	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -v -race ./internal/storage/integration_test.go ./internal/storage/interface.go ./internal/storage/minio.go ./internal/storage/gcs.go
+
+## test-all: Run all tests including integration tests
+test-all:
+	@echo "Running all tests including integration tests..."
+	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -v -race ./...
 
 ## test-coverage: Run tests with coverage report
 test-coverage:
 	@echo "Running tests with coverage..."
-	$(GOTEST) -coverprofile=$(COVERAGE_FILE) ./...
+	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -coverprofile=$(COVERAGE_FILE) ./...
 	@echo ""
 	@echo "Coverage summary:"
 	$(GOCMD) tool cover -func=$(COVERAGE_FILE)
