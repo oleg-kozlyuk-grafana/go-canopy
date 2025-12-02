@@ -160,7 +160,7 @@ canopy/
   - Simple channel-based queue for all-in-one mode
   - Synchronous processing
 
-- [ ] **2.5** Write queue tests
+- [x] **2.5** Write queue tests
   - Test publish/subscribe cycle
   - Test error handling
   - Test message serialization
