@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/oleg-kozlyuk/canopy/internal/config"
+	"github.com/oleg-kozlyuk/canopy/internal/local"
 	"github.com/spf13/cobra"
 )
 
@@ -15,8 +17,9 @@ var (
 	date    = "unknown"
 
 	// CLI flags
-	port        int
-	disableHMAC bool
+	port         int
+	disableHMAC  bool
+	coveragePath string
 )
 
 func main() {
@@ -33,7 +36,9 @@ var rootCmd = &cobra.Command{
 It receives GitHub workflow_run webhooks, processes Go coverage files, and posts check runs
 with annotations highlighting uncovered lines.
 
-MODE must be one of: all-in-one, initiator, or worker`,
+MODE must be one of: all-in-one, initiator, worker, or local
+
+Local mode analyzes local code coverage against the current git diff to find uncovered lines.`,
 	Args: cobra.ExactArgs(1),
 	RunE: run,
 }
@@ -55,11 +60,17 @@ func init() {
 	// Define flags
 	rootCmd.Flags().IntVar(&port, "port", 8080, "HTTP server port")
 	rootCmd.Flags().BoolVar(&disableHMAC, "disable-hmac", false, "Disable HMAC signature validation (for local development only)")
+	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files (for local mode)")
 }
 
 func run(cmd *cobra.Command, args []string) error {
 	// Get mode from positional argument
 	mode := config.Mode(args[0])
+
+	// Handle local mode separately (doesn't need full config)
+	if mode == config.ModeLocal {
+		return runLocal()
+	}
 
 	// Override environment variables with CLI flags if they were explicitly set
 	if cmd.Flags().Changed("port") {
@@ -110,4 +121,11 @@ func runWorker(cfg *config.Config) error {
 	// TODO: Implement worker mode
 	fmt.Println("Worker mode not yet implemented")
 	return nil
+}
+
+func runLocal() error {
+	runner := local.NewRunner(local.Config{
+		CoveragePath: coveragePath,
+	})
+	return runner.Run(context.Background())
 }

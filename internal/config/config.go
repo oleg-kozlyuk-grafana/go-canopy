@@ -14,6 +14,7 @@ const (
 	ModeAllInOne  Mode = "all-in-one"
 	ModeInitiator Mode = "initiator"
 	ModeWorker    Mode = "worker"
+	ModeLocal     Mode = "local"
 )
 
 // QueueType represents the type of message queue to use
@@ -136,6 +137,9 @@ func Load(mode Mode) (*Config, error) {
 		if err := cfg.loadWorkerConfig(mode); err != nil {
 			return nil, err
 		}
+	case ModeLocal:
+		// Local mode doesn't need any additional configuration
+		// It just uses git and local coverage files
 	}
 
 	// Validate the complete configuration
@@ -384,10 +388,10 @@ func (c *Config) loadInitiatorSettings() error {
 // validateMode validates that the mode is valid
 func validateMode(mode Mode) error {
 	switch mode {
-	case ModeAllInOne, ModeInitiator, ModeWorker:
+	case ModeAllInOne, ModeInitiator, ModeWorker, ModeLocal:
 		return nil
 	default:
-		return fmt.Errorf("invalid mode: %s (must be all-in-one, initiator, or worker)", mode)
+		return fmt.Errorf("invalid mode: %s (must be all-in-one, initiator, worker, or local)", mode)
 	}
 }
 
@@ -441,6 +445,10 @@ func (c *Config) Validate(mode Mode) error {
 		if c.GitHub.AppID == 0 {
 			return fmt.Errorf("GitHub App ID is required")
 		}
+
+	case ModeLocal:
+		// Local mode doesn't need any cloud configuration
+		// No validation required beyond port validation (done above)
 	}
 
 	return nil
