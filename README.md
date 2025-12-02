@@ -1,6 +1,6 @@
 # Canopy
 
-Canopy is a Go code coverage analysis tool that helps you understand coverage for your changes. It compares your local changes against coverage data to highlight uncovered lines in your diff.
+Canopy is a Go code coverage analysis tool that allows to highlight uncovered lines in diff - based on local working directory, specific commit or diff between HEAD and base commit
 
 ## Features
 
