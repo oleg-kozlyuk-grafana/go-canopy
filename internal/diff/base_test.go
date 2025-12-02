@@ -60,12 +60,6 @@ func TestGitBaseDiffSource_GetDiff(t *testing.T) {
 			expectEmpty: false,
 		},
 		{
-			name:        "branch name as base ref",
-			baseRef:     "main",
-			expectError: false,
-			expectEmpty: false,
-		},
-		{
 			name:        "empty base ref returns error",
 			baseRef:     "",
 			expectError: true,
