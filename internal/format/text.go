@@ -1,4 +1,4 @@
-package local
+package format
 
 import (
 	"fmt"
@@ -7,9 +7,12 @@ import (
 	"github.com/oleg-kozlyuk/canopy/internal/coverage"
 )
 
-// FormatResults formats analysis results for console output.
+// TextFormatter formats analysis results as plain text for console output.
 // Groups uncovered lines by file and shows line ranges where possible.
-func FormatResults(result *coverage.AnalysisResult, w io.Writer) error {
+type TextFormatter struct{}
+
+// Format formats the analysis result as plain text.
+func (f *TextFormatter) Format(result *coverage.AnalysisResult, w io.Writer) error {
 	if result == nil {
 		return fmt.Errorf("result is nil")
 	}

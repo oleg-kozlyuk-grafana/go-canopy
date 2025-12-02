@@ -1,4 +1,4 @@
-package local
+package format
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFormatResults(t *testing.T) {
+func TestTextFormatter_Format(t *testing.T) {
 	tests := []struct {
 		name           string
 		result         *coverage.AnalysisResult
@@ -99,8 +99,9 @@ Summary: 10 uncovered lines out of 15 added lines (33.3% coverage)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			formatter := &TextFormatter{}
 			var buf bytes.Buffer
-			err := FormatResults(tt.result, &buf)
+			err := formatter.Format(tt.result, &buf)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -227,7 +228,7 @@ func TestAppendRange(t *testing.T) {
 	}
 }
 
-func TestFormatResults_AlphabeticalOrder(t *testing.T) {
+func TestTextFormatter_AlphabeticalOrder(t *testing.T) {
 	// Test that files are output in alphabetical order
 	result := &coverage.AnalysisResult{
 		UncoveredByFile: map[string][]int{
@@ -239,8 +240,9 @@ func TestFormatResults_AlphabeticalOrder(t *testing.T) {
 		TotalUncovered: 3,
 	}
 
+	formatter := &TextFormatter{}
 	var buf bytes.Buffer
-	err := FormatResults(result, &buf)
+	err := formatter.Format(result, &buf)
 	require.NoError(t, err)
 
 	output := buf.String()

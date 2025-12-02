@@ -17,6 +17,7 @@ var (
 
 	// CLI flags
 	coveragePath string
+	format       string
 )
 
 func main() {
@@ -56,11 +57,13 @@ func init() {
 
 	// Define flags
 	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files")
+	rootCmd.Flags().StringVar(&format, "format", "Text", "Output format (Text, Markdown, GitHubAnnotations)")
 }
 
 func run(cmd *cobra.Command, args []string) error {
 	runner := local.NewRunner(local.Config{
 		CoveragePath: coveragePath,
+		Format:       format,
 	})
 	return runner.Run(context.Background())
 }

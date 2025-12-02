@@ -1,0 +1,57 @@
+package format
+
+import (
+	"fmt"
+	"io"
+
+	"github.com/oleg-kozlyuk/canopy/internal/coverage"
+)
+
+// MarkdownFormatter formats analysis results as Markdown.
+// Outputs a table with uncovered lines by file and a summary.
+type MarkdownFormatter struct{}
+
+// Format formats the analysis result as Markdown.
+func (f *MarkdownFormatter) Format(result *coverage.AnalysisResult, w io.Writer) error {
+	if result == nil {
+		return fmt.Errorf("result is nil")
+	}
+
+	// Handle case where all lines are covered
+	if !result.HasUncoveredLines() {
+		if result.TotalAdded == 0 {
+			fmt.Fprintln(w, "No lines added in diff")
+			return nil
+		}
+		fmt.Fprintln(w, "All added lines are covered!")
+		return nil
+	}
+
+	// Print header
+	fmt.Fprintln(w, "## Uncovered Lines in Diff")
+	fmt.Fprintln(w)
+
+	// Print table header
+	fmt.Fprintln(w, "| File | Lines |")
+	fmt.Fprintln(w, "|------|-------|")
+
+	// Print uncovered lines grouped by file (sorted alphabetically)
+	sortedFiles := result.GetSortedFiles()
+	for _, file := range sortedFiles {
+		lines := result.UncoveredByFile[file]
+		fmt.Fprintf(w, "| %s | %s |\n", file, formatLineRanges(lines))
+	}
+
+	fmt.Fprintln(w)
+
+	// Print summary with percentage
+	coveragePercent := 0.0
+	if result.TotalAdded > 0 {
+		coveragePercent = float64(result.TotalAdded-result.TotalUncovered) / float64(result.TotalAdded) * 100
+	}
+
+	fmt.Fprintf(w, "**Summary:** %d uncovered lines out of %d added (%.1f%% coverage)\n",
+		result.TotalUncovered, result.TotalAdded, coveragePercent)
+
+	return nil
+}

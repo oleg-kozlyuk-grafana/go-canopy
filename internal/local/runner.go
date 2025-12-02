@@ -7,12 +7,15 @@ import (
 	"os/exec"
 
 	"github.com/oleg-kozlyuk/canopy/internal/coverage"
+	"github.com/oleg-kozlyuk/canopy/internal/format"
 )
 
 // Config holds configuration for local mode.
 type Config struct {
 	// CoveragePath is the directory containing coverage files (*.out)
 	CoveragePath string
+	// Format is the output format (Text, Markdown, GitHubAnnotations)
+	Format string
 }
 
 // Runner handles local coverage analysis.
@@ -67,7 +70,12 @@ func (r *Runner) Run(ctx context.Context) error {
 	result := coverage.AnalyzeCoverage(profiles, addedLinesByFile)
 
 	// Step 5: Output results
-	if err := FormatResults(result, os.Stdout); err != nil {
+	formatter, err := format.New(r.config.Format)
+	if err != nil {
+		return fmt.Errorf("failed to create formatter: %w", err)
+	}
+
+	if err := formatter.Format(result, os.Stdout); err != nil {
 		return fmt.Errorf("failed to format results: %w", err)
 	}
 
