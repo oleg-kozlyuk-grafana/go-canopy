@@ -214,7 +214,7 @@ canopy/
     - Test handling malformed coverage data
     - Test empty files and edge cases
 
-- [ ] **4.2** Implement coverage merger (`internal/coverage/merger.go`)
+- [x] **4.2** Implement coverage merger (`internal/coverage/merger.go`)
   - Merge multiple coverage profiles (gocovmerge algorithm)
   - Handle overlapping coverage blocks
   - Serialize merged profiles back to standard format
