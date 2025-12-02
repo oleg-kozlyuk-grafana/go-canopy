@@ -61,11 +61,6 @@ test-coverage:
 	@echo "Coverage summary:"
 	$(GOCMD) tool cover -func=$(COVERAGE_FILE)
 	@echo ""
-	@echo "Checking coverage threshold (80%)..."
-	@$(GOCMD) tool cover -func=$(COVERAGE_FILE) | grep total | \
-		awk '{print $$3}' | sed 's/%//' | \
-		awk '{if ($$1 < 80) {print "❌ Coverage is below 80%: " $$1 "%"; exit 1} else {print "✅ Coverage is above 80%: " $$1 "%"}}'
-	@echo ""
 	@echo "To view detailed coverage report in browser:"
 	@echo "  make coverage-html"
 

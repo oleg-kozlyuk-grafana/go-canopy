@@ -70,11 +70,9 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{
-				"main.go": {1, 2, 3},
-			},
-			expectedAdded:3,
-			expectedTotalUncovered:3,
+			expectedUncoveredByFile: map[string][]int{},
+			expectedAdded:           0,
+			expectedTotalUncovered:  0,
 		},
 		{
 			name: "multiple files mixed coverage",
@@ -97,14 +95,13 @@ func TestAnalyzeCoverage(t *testing.T) {
 			},
 			addedLinesByFile: map[string][]int{
 				"server.go":  {15, 35},
-				"handler.go": {10, 20},
+				"handler.go": {10, 20}, // line 20 not in any block, will be ignored
 			},
 			expectedUncoveredByFile: map[string][]int{
-				"server.go":  {35},
-				"handler.go": {20},
+				"server.go": {35}, // only server.go line 35 is uncovered
 			},
-			expectedAdded:4,
-			expectedTotalUncovered:2,
+			expectedAdded:          4,
+			expectedTotalUncovered: 1, // only 1 uncovered (line 20 is ignored as non-instrumented)
 		},
 		{
 			name:             "empty diff",
@@ -129,11 +126,9 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{
-				"main.go": {1, 2, 3}, // no coverage for main.go, all flagged as uncovered
-			},
-			expectedAdded:3,
-			expectedTotalUncovered:3,
+			expectedUncoveredByFile: map[string][]int{},
+			expectedAdded:           0,
+			expectedTotalUncovered:  0,
 		},
 		{
 			name:     "no coverage data",
@@ -141,11 +136,9 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{
-				"main.go": {1, 2, 3},
-			},
-			expectedAdded:3,
-			expectedTotalUncovered:3,
+			expectedUncoveredByFile: map[string][]int{},
+			expectedAdded:           0,
+			expectedTotalUncovered:  0,
 		},
 		{
 			name: "nested file paths",
@@ -167,6 +160,27 @@ func TestAnalyzeCoverage(t *testing.T) {
 			},
 			expectedAdded:2,
 			expectedTotalUncovered:1,
+		},
+		{
+			name: "non-instrumented lines are ignored",
+			profiles: []*Profile{
+				{
+					FileName: "github.com/org/repo/main.go",
+					Mode:     "set",
+					Blocks: []ProfileBlock{
+						{StartLine: 5, EndLine: 7, Count: 1},   // covered: lines 5-7
+						{StartLine: 10, EndLine: 12, Count: 0}, // uncovered: lines 10-12
+					},
+				},
+			},
+			addedLinesByFile: map[string][]int{
+				"main.go": {1, 3, 6, 8, 11, 15}, // lines 1,3,8,15 are not in any block
+			},
+			expectedUncoveredByFile: map[string][]int{
+				"main.go": {11}, // only line 11 is uncovered (in block with Count=0)
+			},
+			expectedAdded:          6,
+			expectedTotalUncovered: 1, // only 1 uncovered line (11), others are ignored
 		},
 	}
 
@@ -247,6 +261,81 @@ func TestFindMatchingProfile(t *testing.T) {
 			} else {
 				assert.Nil(t, profile, "expected no matching profile")
 			}
+		})
+	}
+}
+
+func TestIsLineInstrumented(t *testing.T) {
+	profile := &Profile{
+		FileName: "test.go",
+		Mode:     "set",
+		Blocks: []ProfileBlock{
+			{StartLine: 5, EndLine: 10, Count: 1},  // covered
+			{StartLine: 15, EndLine: 20, Count: 0}, // not covered
+			{StartLine: 25, EndLine: 30, Count: 5}, // covered (count mode)
+		},
+	}
+
+	tests := []struct {
+		name     string
+		profile  *Profile
+		line     int
+		expected bool
+	}{
+		{
+			name:     "line in covered block",
+			profile:  profile,
+			line:     7,
+			expected: true,
+		},
+		{
+			name:     "line in uncovered block",
+			profile:  profile,
+			line:     17,
+			expected: true,
+		},
+		{
+			name:     "line not in any block",
+			profile:  profile,
+			line:     12,
+			expected: false,
+		},
+		{
+			name:     "line before all blocks",
+			profile:  profile,
+			line:     1,
+			expected: false,
+		},
+		{
+			name:     "line after all blocks",
+			profile:  profile,
+			line:     50,
+			expected: false,
+		},
+		{
+			name:     "line at block start",
+			profile:  profile,
+			line:     5,
+			expected: true,
+		},
+		{
+			name:     "line at block end",
+			profile:  profile,
+			line:     10,
+			expected: true,
+		},
+		{
+			name:     "nil profile",
+			profile:  nil,
+			line:     5,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isLineInstrumented(tt.profile, tt.line)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

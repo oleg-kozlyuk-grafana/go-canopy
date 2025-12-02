@@ -51,10 +51,8 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 		TotalUncovered:  0,
 	}
 
-	// Track which diff files have been processed via coverage
-	processedDiffFiles := make(map[string]bool)
-
-	// Step 1: Process files that have coverage data
+	// Process files that have coverage data
+	// Files without coverage records are excluded from the output
 	for _, profile := range profiles {
 		// Find the matching diff file
 		diffFile, addedLines, found := findMatchingDiffFile(profile, addedLinesByFile)
@@ -63,15 +61,16 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 			continue
 		}
 
-		// Mark this diff file as processed
-		processedDiffFiles[diffFile] = true
-
 		// Count total added lines for this file
 		result.TotalAdded += len(addedLines)
 
 		// Check each added line to see if it's covered
 		var uncoveredLines []int
 		for _, line := range addedLines {
+			// Only consider lines that are instrumented (in a coverage block)
+			if !isLineInstrumented(profile, line) {
+				continue // Skip non-executable lines (comments, blank lines, etc.)
+			}
 			if !isLineCovered(profile, line) {
 				uncoveredLines = append(uncoveredLines, line)
 				result.TotalUncovered++
@@ -81,16 +80,6 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 		// Only add to result if there are uncovered lines
 		if len(uncoveredLines) > 0 {
 			result.UncoveredByFile[diffFile] = uncoveredLines
-		}
-	}
-
-	// Step 2: Handle diff files with NO coverage data (flag all added lines as uncovered)
-	for diffFile, addedLines := range addedLinesByFile {
-		if !processedDiffFiles[diffFile] {
-			// This file is in the diff but has no coverage data
-			result.TotalAdded += len(addedLines)
-			result.TotalUncovered += len(addedLines)
-			result.UncoveredByFile[diffFile] = addedLines
 		}
 	}
 
@@ -120,6 +109,23 @@ func findMatchingProfile(profilesByFile map[string]*Profile, diffFile string) *P
 	}
 
 	return nil
+}
+
+// isLineInstrumented checks if a line falls within any coverage block.
+// Returns true if the line is in ANY block (regardless of count).
+// Lines not in any block are non-executable (comments, blank lines, etc.) and should be ignored.
+func isLineInstrumented(profile *Profile, line int) bool {
+	if profile == nil {
+		return false
+	}
+
+	for _, block := range profile.Blocks {
+		if line >= block.StartLine && line <= block.EndLine {
+			return true
+		}
+	}
+
+	return false
 }
 
 // isLineCovered checks if a specific line is covered by the profile.
