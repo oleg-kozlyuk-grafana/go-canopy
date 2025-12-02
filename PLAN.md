@@ -136,7 +136,7 @@ canopy/
   - Test flag precedence
   - Test validation errors
 
-- [ ] **1.6** Create Makefile
+- [x] **1.6** Create Makefile
   - `make build` - Build binary
   - `make test` - Run tests
   - `make test-coverage` - Run tests with coverage report

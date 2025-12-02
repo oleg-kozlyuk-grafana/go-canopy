@@ -99,8 +99,8 @@ type InitiatorConfig struct {
 	WebhookSecret string
 
 	// Filtering
-	AllowedOrgs       []string
-	AllowedWorkflows  []string
+	AllowedOrgs      []string
+	AllowedWorkflows []string
 }
 
 // Load loads configuration from environment variables for the specified mode

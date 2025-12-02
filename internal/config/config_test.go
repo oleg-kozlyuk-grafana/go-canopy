@@ -67,22 +67,22 @@ func TestLoad_InvalidPort(t *testing.T) {
 
 func TestLoad_AllInOneMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_PORT":                    "8080",
-		"CANOPY_DISABLE_HMAC":            "false",
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_MINIO_BUCKET":            "canopy-coverage",
-		"CANOPY_MINIO_USE_SSL":           "false",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org,another-org",
-		"CANOPY_ALLOWED_WORKFLOWS":       "CI,Build",
+
+		"CANOPY_PORT":                   "8080",
+		"CANOPY_DISABLE_HMAC":           "false",
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_MINIO_BUCKET":           "canopy-coverage",
+		"CANOPY_MINIO_USE_SSL":          "false",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org,another-org",
+		"CANOPY_ALLOWED_WORKFLOWS":      "CI,Build",
 	})
 	defer cleanup()
 
@@ -90,7 +90,6 @@ func TestLoad_AllInOneMode_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	
 	assert.Equal(t, 8080, cfg.Port)
 	assert.False(t, cfg.DisableHMAC)
 	assert.Equal(t, QueueTypeInMemory, cfg.Queue.Type)
@@ -106,21 +105,21 @@ func TestLoad_AllInOneMode_Success(t *testing.T) {
 
 func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_REDIS_PASSWORD":          "password",
-		"CANOPY_REDIS_DB":                "1",
-		"CANOPY_REDIS_STREAM":            "my-stream",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_REDIS_PASSWORD":         "password",
+		"CANOPY_REDIS_DB":               "1",
+		"CANOPY_REDIS_STREAM":           "my-stream",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -137,18 +136,18 @@ func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
 
 func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "pubsub",
-		"CANOPY_PUBSUB_PROJECT_ID":       "my-project",
-		"CANOPY_PUBSUB_TOPIC_ID":         "my-topic",
-		"CANOPY_PUBSUB_SUBSCRIPTION":     "my-subscription",
-		"CANOPY_STORAGE_TYPE":            "gcs",
-		"CANOPY_GCS_BUCKET":              "my-bucket",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "pubsub",
+		"CANOPY_PUBSUB_PROJECT_ID":      "my-project",
+		"CANOPY_PUBSUB_TOPIC_ID":        "my-topic",
+		"CANOPY_PUBSUB_SUBSCRIPTION":    "my-subscription",
+		"CANOPY_STORAGE_TYPE":           "gcs",
+		"CANOPY_GCS_BUCKET":             "my-bucket",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -166,14 +165,14 @@ func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 
 func TestLoad_InitiatorMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_PORT":                "8080",
-		"CANOPY_QUEUE_TYPE":          "pubsub",
-		"CANOPY_PUBSUB_PROJECT_ID":   "my-project",
-		"CANOPY_PUBSUB_TOPIC_ID":     "my-topic",
-		"CANOPY_WEBHOOK_SECRET":      "my-secret",
-		"CANOPY_ALLOWED_ORGS":        "my-org",
-		"CANOPY_ALLOWED_WORKFLOWS":   "CI",
+
+		"CANOPY_PORT":              "8080",
+		"CANOPY_QUEUE_TYPE":        "pubsub",
+		"CANOPY_PUBSUB_PROJECT_ID": "my-project",
+		"CANOPY_PUBSUB_TOPIC_ID":   "my-topic",
+		"CANOPY_WEBHOOK_SECRET":    "my-secret",
+		"CANOPY_ALLOWED_ORGS":      "my-org",
+		"CANOPY_ALLOWED_WORKFLOWS": "CI",
 	})
 	defer cleanup()
 
@@ -181,16 +180,15 @@ func TestLoad_InitiatorMode_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	
 	assert.Equal(t, QueueTypePubSub, cfg.Queue.Type)
 	assert.Equal(t, "my-org", cfg.Initiator.AllowedOrgs[0])
 }
 
 func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_WEBHOOK_SECRET":   "my-secret",
-		"CANOPY_ALLOWED_ORGS":     "my-org",
+
+		"CANOPY_WEBHOOK_SECRET": "my-secret",
+		"CANOPY_ALLOWED_ORGS":   "my-org",
 	})
 	defer cleanup()
 
@@ -202,7 +200,7 @@ func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
 
 func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
+
 		"CANOPY_QUEUE_TYPE":     "inmemory",
 		"CANOPY_WEBHOOK_SECRET": "my-secret",
 		"CANOPY_ALLOWED_ORGS":   "my-org",
@@ -217,11 +215,11 @@ func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
 
 func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":        "redis",
-		"CANOPY_REDIS_ADDR":        "localhost:6379",
-		"CANOPY_ALLOWED_ORGS":      "my-org",
-		"CANOPY_DISABLE_HMAC":      "false",
+
+		"CANOPY_QUEUE_TYPE":   "redis",
+		"CANOPY_REDIS_ADDR":   "localhost:6379",
+		"CANOPY_ALLOWED_ORGS": "my-org",
+		"CANOPY_DISABLE_HMAC": "false",
 	})
 	defer cleanup()
 
@@ -233,11 +231,11 @@ func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 
 func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":        "redis",
-		"CANOPY_REDIS_ADDR":        "localhost:6379",
-		"CANOPY_ALLOWED_ORGS":      "my-org",
-		"CANOPY_DISABLE_HMAC":      "true",
+
+		"CANOPY_QUEUE_TYPE":   "redis",
+		"CANOPY_REDIS_ADDR":   "localhost:6379",
+		"CANOPY_ALLOWED_ORGS": "my-org",
+		"CANOPY_DISABLE_HMAC": "true",
 	})
 	defer cleanup()
 
@@ -250,16 +248,16 @@ func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 
 func TestLoad_WorkerMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -267,7 +265,6 @@ func TestLoad_WorkerMode_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	
 	assert.Equal(t, QueueTypeRedis, cfg.Queue.Type)
 	assert.Equal(t, StorageTypeMinio, cfg.Storage.Type)
 	assert.Equal(t, int64(123456), cfg.GitHub.AppID)
@@ -275,12 +272,12 @@ func TestLoad_WorkerMode_Success(t *testing.T) {
 
 func TestLoad_WorkerMode_MissingStorage(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -292,13 +289,13 @@ func TestLoad_WorkerMode_MissingStorage(t *testing.T) {
 
 func TestLoad_WorkerMode_MissingGitHub(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":        "redis",
-		"CANOPY_REDIS_ADDR":        "localhost:6379",
-		"CANOPY_STORAGE_TYPE":      "minio",
-		"CANOPY_MINIO_ENDPOINT":    "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":  "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":  "minioadmin",
+
+		"CANOPY_QUEUE_TYPE":       "redis",
+		"CANOPY_REDIS_ADDR":       "localhost:6379",
+		"CANOPY_STORAGE_TYPE":     "minio",
+		"CANOPY_MINIO_ENDPOINT":   "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY": "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY": "minioadmin",
 	})
 	defer cleanup()
 
@@ -310,15 +307,15 @@ func TestLoad_WorkerMode_MissingGitHub(t *testing.T) {
 
 func TestLoad_WorkerMode_InMemoryQueueNotAllowed(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -330,16 +327,16 @@ func TestLoad_WorkerMode_InMemoryQueueNotAllowed(t *testing.T) {
 
 func TestLoad_MissingAllowedOrgs(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
+
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
 	})
 	defer cleanup()
 
@@ -351,17 +348,17 @@ func TestLoad_MissingAllowedOrgs(t *testing.T) {
 
 func TestLoad_DefaultPort(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -372,18 +369,18 @@ func TestLoad_DefaultPort(t *testing.T) {
 
 func TestLoad_CustomPort(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_PORT":                    "9090",
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_PORT":                   "9090",
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -416,17 +413,17 @@ func TestValidate_InvalidPort(t *testing.T) {
 
 func TestLoad_AllowedWorkflowsOptional(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -437,17 +434,17 @@ func TestLoad_AllowedWorkflowsOptional(t *testing.T) {
 
 func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            " org1 , org2 , org3 ",
+
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           " org1 , org2 , org3 ",
 	})
 	defer cleanup()
 
@@ -458,16 +455,16 @@ func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
 
 func TestLoad_InvalidGitHubAppID(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "not-a-number",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "not-a-number",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -479,19 +476,19 @@ func TestLoad_InvalidGitHubAppID(t *testing.T) {
 
 func TestLoad_InvalidRedisDB(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_REDIS_DB":                "not-a-number",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_REDIS_DB":               "not-a-number",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -503,15 +500,15 @@ func TestLoad_InvalidRedisDB(t *testing.T) {
 
 func TestLoad_PubSubMissingSubscriptionForWorker(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "pubsub",
-		"CANOPY_PUBSUB_PROJECT_ID":       "my-project",
-		"CANOPY_PUBSUB_TOPIC_ID":         "my-topic",
-		"CANOPY_STORAGE_TYPE":            "gcs",
-		"CANOPY_GCS_BUCKET":              "my-bucket",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "pubsub",
+		"CANOPY_PUBSUB_PROJECT_ID":      "my-project",
+		"CANOPY_PUBSUB_TOPIC_ID":        "my-topic",
+		"CANOPY_STORAGE_TYPE":           "gcs",
+		"CANOPY_GCS_BUCKET":             "my-bucket",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -523,16 +520,16 @@ func TestLoad_PubSubMissingSubscriptionForWorker(t *testing.T) {
 
 func TestLoad_MinIODefaultBucket(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -555,16 +552,16 @@ func TestLoad_MinIOUseSSL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envVars := map[string]string{
-				
-				"CANOPY_QUEUE_TYPE":              "redis",
-				"CANOPY_REDIS_ADDR":              "localhost:6379",
-				"CANOPY_STORAGE_TYPE":            "minio",
-				"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-				"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-				"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-				"CANOPY_GITHUB_APP_ID":           "123456",
-				"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-				"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+				"CANOPY_QUEUE_TYPE":             "redis",
+				"CANOPY_REDIS_ADDR":             "localhost:6379",
+				"CANOPY_STORAGE_TYPE":           "minio",
+				"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+				"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+				"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+				"CANOPY_GITHUB_APP_ID":          "123456",
+				"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+				"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 			}
 			if tt.value != "" {
 				envVars["CANOPY_MINIO_USE_SSL"] = tt.value
@@ -582,15 +579,15 @@ func TestLoad_MinIOUseSSL(t *testing.T) {
 
 func TestLoad_RedisDefaults(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -604,13 +601,13 @@ func TestLoad_RedisDefaults(t *testing.T) {
 
 func TestLoad_GCSMissingBucket(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_STORAGE_TYPE":            "gcs",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_STORAGE_TYPE":           "gcs",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -622,13 +619,13 @@ func TestLoad_GCSMissingBucket(t *testing.T) {
 
 func TestLoad_InvalidStorageType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "redis",
-		"CANOPY_REDIS_ADDR":              "localhost:6379",
-		"CANOPY_STORAGE_TYPE":            "invalid-storage",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+
+		"CANOPY_QUEUE_TYPE":             "redis",
+		"CANOPY_REDIS_ADDR":             "localhost:6379",
+		"CANOPY_STORAGE_TYPE":           "invalid-storage",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
 	})
 	defer cleanup()
 
@@ -640,17 +637,17 @@ func TestLoad_InvalidStorageType(t *testing.T) {
 
 func TestLoad_InvalidQueueType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_QUEUE_TYPE":              "invalid-queue",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_QUEUE_TYPE":             "invalid-queue",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -667,18 +664,18 @@ func TestLoad_InvalidQueueType(t *testing.T) {
 
 func TestFlagPrecedence_Port(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_PORT":                    "8080", // Original env var value
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_PORT":                   "8080", // Original env var value
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -692,18 +689,18 @@ func TestFlagPrecedence_Port(t *testing.T) {
 
 func TestFlagPrecedence_DisableHMAC(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_DISABLE_HMAC":            "false", // Original env var value
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_DISABLE_HMAC":           "false", // Original env var value
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -717,19 +714,19 @@ func TestFlagPrecedence_DisableHMAC(t *testing.T) {
 
 func TestFlagPrecedence_MultipleFlags(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		
-		"CANOPY_PORT":                    "8080",
-		"CANOPY_DISABLE_HMAC":            "false",
-		"CANOPY_QUEUE_TYPE":              "inmemory",
-		"CANOPY_STORAGE_TYPE":            "minio",
-		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
-		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
-		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
-		"CANOPY_GITHUB_APP_ID":           "123456",
-		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
-		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
-		"CANOPY_WEBHOOK_SECRET":          "my-secret",
-		"CANOPY_ALLOWED_ORGS":            "my-org",
+
+		"CANOPY_PORT":                   "8080",
+		"CANOPY_DISABLE_HMAC":           "false",
+		"CANOPY_QUEUE_TYPE":             "inmemory",
+		"CANOPY_STORAGE_TYPE":           "minio",
+		"CANOPY_MINIO_ENDPOINT":         "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":       "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":       "minioadmin",
+		"CANOPY_GITHUB_APP_ID":          "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID": "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":     "test-key",
+		"CANOPY_WEBHOOK_SECRET":         "my-secret",
+		"CANOPY_ALLOWED_ORGS":           "my-org",
 	})
 	defer cleanup()
 
@@ -739,7 +736,7 @@ func TestFlagPrecedence_MultipleFlags(t *testing.T) {
 
 	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, 3000, cfg.Port, "port flag should override env var")
 	assert.True(t, cfg.DisableHMAC, "disable-hmac flag should override env var")
 }
