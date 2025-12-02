@@ -190,7 +190,7 @@ canopy/
   - Download with not-found handling
   - Tests for validation and error handling
 
-- [ ] **3.3** Implement MinIO adapter (`internal/storage/minio.go`)
+- [x] **3.3** Implement MinIO adapter (`internal/storage/minio.go`)
   - Client initialization (endpoint, credentials, SSL)
   - S3-compatible API usage
   - Bucket existence check
