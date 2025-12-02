@@ -236,7 +236,7 @@ canopy/
     - Test binary file handling
     - Test file renames
 
-- [ ] **4.4** Implement coverage analysis (`internal/coverage/analysis.go`)
+- [x] **4.4** Implement coverage analysis (`internal/coverage/analysis.go`)
   - Calculate overall coverage percentage
   - Calculate per-file coverage
   - Cross-reference coverage with diff (find uncovered added lines)
@@ -251,7 +251,7 @@ canopy/
 
 ### Phase 5: Initiator Service
 
-- [ ] **5.1** Implement HMAC validation (`internal/initiator/hmac.go`)
+- [x] **5.1** Implement HMAC validation (`internal/initiator/hmac.go`)
   - Parse `X-Hub-Signature-256` header
   - Compute HMAC-SHA256 of payload
   - Constant-time comparison
