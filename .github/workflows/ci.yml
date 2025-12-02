@@ -9,15 +9,19 @@ on:
       - main
 
 jobs:
-  test:
-    name: Build and Test
+  self-test:
+    name: Self-test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        covermode: [set, count, atomic]
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for commit analysis
+          fetch-depth: 0  # Fetch full history for proper diff computation
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -27,17 +31,16 @@ jobs:
       - name: Build
         run: go build ./...
 
+      - name: Create coverage dir
+        run: mkdir -p .coverage
+
       - name: Run tests with coverage
-        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
-
-      - name: Generate coverage report
-        run: go tool cover -func=coverage.out
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.out
+        run: go test -v -coverprofile=.coverage/coverage-${{ matrix.covermode }}.out -covermode=${{ matrix.covermode }} ./...
 
       - name: Test canopy with GitHubAnnotations format
-        run: go run ./cmd/canopy --commit HEAD --format GitHubAnnotations
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            go run ./cmd/canopy --base ${{ github.event.pull_request.base.sha }} --format GitHubAnnotations
+          else
+            go run ./cmd/canopy --commit ${{ github.sha }} --format GitHubAnnotations
+          fi

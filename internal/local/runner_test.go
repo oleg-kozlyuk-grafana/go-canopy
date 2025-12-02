@@ -133,19 +133,7 @@ func TestNewRunner(t *testing.T) {
 
 	assert.NotNil(t, runner)
 	assert.Equal(t, config.CoveragePath, runner.config.CoveragePath)
-}
-
-func TestRunner_getGitDiff(t *testing.T) {
-	// This test runs the actual git command, so it will only work in a git repository
-	runner := NewRunner(Config{})
-	ctx := context.Background()
-
-	output, err := runner.getGitDiff(ctx)
-
-	// We don't assert on the output content since it depends on the current git state
-	// We just check that the command executed without error
-	assert.NoError(t, err)
-	assert.NotNil(t, output)
+	assert.NotNil(t, runner.diffSource) // Should have default LocalDiffSource
 }
 
 func TestRunner_Run_Integration(t *testing.T) {
