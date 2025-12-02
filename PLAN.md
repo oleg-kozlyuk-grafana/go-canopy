@@ -136,6 +136,15 @@ canopy/
   - Test flag precedence
   - Test validation errors
 
+- [ ] **1.6** Create Makefile
+  - `make build` - Build binary
+  - `make test` - Run tests
+  - `make test-coverage` - Run tests with coverage report
+  - `make docker-build` - Build Docker image
+  - `make local-up` - Start docker-compose
+  - `make local-down` - Stop docker-compose
+  - `make lint` - Run linter
+
 ### Phase 2: Message Queue Abstraction
 
 - [x] **2.1** Define MessageQueue interface (`internal/queue/interface.go`)
