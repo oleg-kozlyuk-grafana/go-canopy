@@ -209,18 +209,32 @@ canopy/
   - Handle coverage files from zip archives (workflow artifacts)
   - Validate coverage profile format
   - Error handling for malformed files
+  - **Tests**:
+    - Test parsing valid coverage files
+    - Test handling malformed coverage data
+    - Test empty files and edge cases
 
 - [ ] **4.2** Implement coverage merger (`internal/coverage/merger.go`)
   - Merge multiple coverage profiles (gocovmerge algorithm)
   - Handle overlapping coverage blocks
   - Serialize merged profiles back to standard format
   - Optimize for performance
+  - **Tests**:
+    - Test merging multiple coverage files with sample data in `testdata/coverage/`
+    - Test overlapping blocks are merged correctly
+    - Test single file merge (no-op)
+    - Test empty coverage handling
 
 - [ ] **4.3** Implement diff parser (`internal/coverage/diff.go`)
   - Parse unified diff format
   - Extract added lines per file
   - Map GitHub CommitFile objects to line numbers
   - Handle binary files and renames
+  - **Tests**:
+    - Test parsing unified diffs with sample data in `testdata/diffs/`
+    - Test extraction of added lines
+    - Test binary file handling
+    - Test file renames
 
 - [ ] **4.4** Implement coverage analysis (`internal/coverage/analysis.go`)
   - Calculate overall coverage percentage
@@ -228,12 +242,12 @@ canopy/
   - Cross-reference coverage with diff (find uncovered added lines)
   - Generate GitHub Check Run annotations
   - Compare base vs head coverage
-
-- [ ] **4.5** Create test fixtures and tests
-  - Sample coverage files in `testdata/coverage/`
-  - Sample diffs in `testdata/diffs/`
-  - Unit tests for each function
-  - Integration tests for full pipeline
+  - **Tests**:
+    - Test coverage percentage calculations
+    - Test finding uncovered lines in diff
+    - Test annotation generation
+    - Test coverage comparison (increase/decrease)
+    - Integration test for full analysis pipeline
 
 ### Phase 5: Initiator Service
 
@@ -242,12 +256,23 @@ canopy/
   - Compute HMAC-SHA256 of payload
   - Constant-time comparison
   - Return specific errors for debugging
+  - **Tests**:
+    - Test valid HMAC signature
+    - Test invalid HMAC signature → returns error
+    - Test missing signature header → returns error
+    - Test malformed header → returns error
+    - Test constant-time comparison (timing attack resistance)
 
 - [ ] **5.2** Implement event validator (`internal/initiator/validator.go`)
   - Check event action == "completed"
   - Check org matches allowed list
   - Check workflow name in allowed list
   - Return specific validation errors
+  - **Tests**:
+    - Test valid event passes validation
+    - Test wrong org → returns error
+    - Test disallowed workflow → returns error
+    - Test non-completed action → returns error
 
 - [ ] **5.3** Implement webhook handler (`internal/initiator/handler.go`)
   - Parse webhook payload
@@ -256,20 +281,21 @@ canopy/
   - Build WorkRequest message
   - Publish to queue
   - Return appropriate HTTP status codes
+  - **Tests**:
+    - Test valid webhook end-to-end processing
+    - Test HMAC disabled (--disable-hmac flag) bypasses validation
+    - Test malformed JSON payload → 400
+    - Test validation failures → appropriate status codes
+    - Mock queue to verify message publishing
 
 - [ ] **5.4** Wire up initiator in main.go
   - Initialize queue client
   - Create handler with dependencies
   - Register route: POST /webhook
   - Start HTTP server
-
-- [ ] **5.5** Write initiator tests
-  - Test valid webhook processing
-  - Test HMAC validation (valid, invalid, missing)
-  - Test org/workflow filtering
-  - Test non-completed events
-  - Test malformed payloads
-  - Mock queue for testing
+  - **Tests**:
+    - Integration test with test HTTP server
+    - Test graceful shutdown
 
 ### Phase 6: GitHub Client Wrapper
 
@@ -283,16 +309,19 @@ canopy/
     - GetDefaultBranch()
     - CreateCheckRun() and UpdateCheckRun()
     - CreateIssueComment(), ListIssueComments(), UpdateIssueComment()
+  - **Tests**:
+    - Test GitHub App authentication flow (JWT generation)
+    - Test each API wrapper method with httptest mock server
+    - Test error handling (rate limiting, 404 not found, 403 forbidden, network errors)
+    - Test token refresh logic
 
 - [ ] **6.2** Implement mock GitHub client (`internal/github/mock.go`)
   - Mock implementation of Client interface
   - Configurable responses for testing
   - Error injection capabilities
-
-- [ ] **6.3** Write GitHub client tests
-  - Test authentication flow
-  - Test each API method with mock responses
-  - Test error handling (rate limiting, not found, etc.)
+  - **Tests**:
+    - Test mock returns configured responses
+    - Test error injection works as expected
 
 ### Phase 7: Worker Service
 
@@ -302,6 +331,11 @@ canopy/
   - Download artifact zip files
   - Extract coverage files from zip
   - Return raw coverage data
+  - **Tests**:
+    - Test listing and filtering artifacts by pattern
+    - Test downloading and extracting zip files
+    - Test no matching artifacts found
+    - Test malformed zip files
 
 - [ ] **7.2** Implement check run manager (`internal/worker/checkrun.go`)
   - Create initial check run with "in_progress" status
@@ -309,12 +343,23 @@ canopy/
   - Set final status (success/failure based on coverage change)
   - Format check run summary: "Project coverage X%, change Y%"
   - Handle GitHub API errors
+  - **Tests**:
+    - Test creating check run
+    - Test updating check run with annotations (verify batching at 50)
+    - Test setting final status (success/failure)
+    - Test summary formatting
+    - Test GitHub API error handling
 
 - [ ] **7.3** Implement PR comment manager (`internal/worker/comment.go`)
   - Generate markdown table with coverage comparison
   - Search for existing bot comment
   - Create new comment or update existing
   - Format: main coverage, PR coverage, change delta
+  - **Tests**:
+    - Test markdown table generation
+    - Test finding existing comment
+    - Test creating new comment
+    - Test updating existing comment
 
 - [ ] **7.4** Implement main worker orchestration (`internal/worker/worker.go`)
   - Fetch workflow run details
@@ -333,6 +378,14 @@ canopy/
     - Update check run with annotations and summary
     - Post/update PR comment with coverage table
     - Set check run status (fail if coverage decreased)
+  - **Tests**:
+    - Test default branch flow (save coverage to storage)
+    - Test PR flow end-to-end (check run, annotations, comment)
+    - Test no coverage artifacts found (log and exit gracefully)
+    - Test no base coverage available (first PR on branch)
+    - Test GitHub API errors (retry and error handling)
+    - Test storage errors
+    - Mock all external dependencies (GitHub, storage, coverage)
 
 - [ ] **7.5** Wire up worker in main.go
   - Initialize GitHub client with App credentials
@@ -341,15 +394,9 @@ canopy/
   - Create worker with dependencies
   - Subscribe to queue with worker.ProcessWorkRequest handler
   - Handle graceful shutdown
-
-- [ ] **7.6** Write worker tests
-  - Test default branch flow (save coverage)
-  - Test PR flow (create check run, annotations, comment)
-  - Test no coverage artifacts found
-  - Test no base coverage available (first PR)
-  - Test GitHub API errors
-  - Test storage errors
-  - Mock all external dependencies
+  - **Tests**:
+    - Integration test with mocked queue and dependencies
+    - Test graceful shutdown on signal
 
 ### Phase 8: All-in-One Mode
 
@@ -358,44 +405,85 @@ canopy/
   - Start worker goroutine
   - Start initiator HTTP server
   - Handle graceful shutdown of both
-
-- [ ] **8.2** Create integration tests for all-in-one mode
-  - End-to-end webhook → coverage processing flow
-  - Use real Redis and MinIO via testcontainers
-  - Mock GitHub API
+  - **Tests**:
+    - End-to-end integration test: webhook → coverage processing flow
+    - Use real Redis and MinIO via testcontainers
+    - Mock GitHub API
+    - Test graceful shutdown of both components
 
 ### Phase 9: Testing & Quality
 
-- [ ] **9.1** Achieve 80% code coverage
+**Note:** Most tests are integrated into implementation phases (4-8). This phase covers cross-cutting concerns.
+
+- [ ] **9.1** Create comprehensive test fixtures (`testdata/`)
+  - Valid webhook payloads in `testdata/webhooks/`
+    - workflow_run completed event (default branch)
+    - workflow_run completed event (PR)
+    - Various org/workflow combinations
+  - Sample coverage files in `testdata/coverage/`
+    - Single file coverage
+    - Multi-file coverage for merging
+    - Edge cases (empty, malformed)
+  - Sample PR diffs in `testdata/diffs/`
+    - Simple additions
+    - File renames
+    - Binary files
+    - Mixed changes
+
+- [ ] **9.2** Verify security test coverage (required by SPEC.md)
+  - Ensure HMAC validation tests exist in Phase 5:
+    - Missing HMAC signature → 401
+    - Invalid HMAC signature → 401
+    - Malformed signature header → 401
+    - Wrong organization → 403
+    - Disallowed workflow → 403
+    - --disable-hmac flag bypasses validation
+  - Review and run security tests
+
+- [ ] **9.3** Enforce 80% code coverage threshold
   - Run coverage reports: `go test -cover ./...`
   - Identify untested code paths
-  - Add missing tests
-  - Add coverage check to CI
+  - Add missing unit tests where needed
+  - Update Makefile coverage target to fail below 80%
+  - Document coverage requirements in README
 
-- [ ] **9.2** Bad auth scenario tests (required by spec)
-  - Missing HMAC signature → 401
-  - Invalid HMAC signature → 401
-  - Malformed signature header → 401
-  - Wrong organization → 403
-  - Disallowed workflow → 403
-  - Ensure --disable-hmac flag bypasses checks
+### Phase 10: Continuous Integration
 
-- [ ] **9.3** Edge case tests
-  - Empty coverage files
-  - No coverage artifacts in workflow run
-  - PR with no Go files changed
-  - Storage unavailable
-  - GitHub API rate limiting
-  - Malformed webhook payloads
+- [ ] **10.1** Create GitHub Actions workflow (`.github/workflows/ci.yml`)
+  - **Trigger**: Pull requests and pushes to main branch
+  - **Jobs**:
+    - **Lint**: Run golangci-lint
+      - Use `golangci/golangci-lint-action@v4`
+      - Configure timeout (5 minutes)
+    - **Test**: Run tests with coverage
+      - Go version matrix (1.22, 1.23)
+      - Run `go test -race -coverprofile=coverage.out -covermode=atomic ./...`
+      - Fail if coverage < 80% threshold
+    - **Build**: Build binary and Docker image
+      - Build for linux/amd64
+      - Build Docker image
+      - (Optional) Push to GitHub Container Registry on main branch
+  - **Integration Tests** (optional separate job):
+    - Use testcontainers for Redis and MinIO
+    - Run integration tests with `go test -tags=integration`
+  - **Tests**:
+    - Verify workflow runs on sample PRs
+    - Test that coverage threshold enforcement works
+    - Test that build failures fail the workflow
 
-- [ ] **9.4** Create comprehensive test fixtures
-  - Valid webhook payloads in `testdata/webhooks/`
-  - Sample coverage files with various scenarios
-  - Sample PR diffs
+- [ ] **10.2** Configure golangci-lint (`.golangci.yml`)
+  - Enable linters: gofmt, govet, staticcheck, unused, gosimple, ineffassign
+  - Configure rules for project style
+  - Set timeout and concurrency
+  - Define skip patterns (e.g., generated code)
 
-### Phase 10: Docker & Local Development
+- [ ] **10.3** Add status badges to README.md
+  - CI status badge
+  - Go Report Card badge (optional)
 
-- [ ] **10.1** Create Dockerfile (`deployments/Dockerfile`)
+### Phase 11: Docker & Local Development
+
+- [ ] **11.1** Create Dockerfile (`deployments/Dockerfile`)
   - Multi-stage build (builder + runtime)
   - Use golang:1.22-alpine for building
   - Use alpine:3.19 for runtime
@@ -403,7 +491,7 @@ canopy/
   - Copy binary only
   - Set entrypoint
 
-- [ ] **10.2** Create docker-compose.yml (`deployments/docker-compose.yml`)
+- [ ] **11.2** Create docker-compose.yml (`deployments/docker-compose.yml`)
   - Redis service (message queue)
   - MinIO service (S3-compatible storage)
   - MinIO initialization (create bucket)
@@ -412,43 +500,43 @@ canopy/
   - Volume persistence
   - Port mappings
 
-- [ ] **10.3** Create .env.example (`deployments/.env.example`)
+- [ ] **11.3** Create .env.example (`deployments/.env.example`)
   - Document all required environment variables
   - Provide example values for local dev
 
-- [ ] **10.4** Test local development setup
+- [ ] **11.4** Test local development setup
   - `docker-compose up` should start all services
   - Send test webhook to localhost:8080
   - Verify coverage processing works end-to-end
   - Check MinIO console for stored coverage
   - Verify Redis queue messages
 
-### Phase 11: Terraform Infrastructure
+### Phase 12: Terraform Infrastructure
 
-- [ ] **11.1** Create Terraform providers config (`terraform/providers.tf`)
+- [ ] **12.1** Create Terraform providers config (`terraform/providers.tf`)
   - Google provider configuration
   - Required provider versions
   - Backend configuration (optional)
 
-- [ ] **11.2** Create variables (`terraform/variables.tf`)
+- [ ] **12.2** Create variables (`terraform/variables.tf`)
   - project_id, region
   - github_webhook_secret, github_app_id, github_installation_id, github_private_key
   - allowed_org, allowed_workflows
   - All other configurable values
 
-- [ ] **11.3** Implement Pub/Sub resources (`terraform/pubsub.tf`)
+- [ ] **12.3** Implement Pub/Sub resources (`terraform/pubsub.tf`)
   - Topic: canopy-coverage-requests
   - Subscription: canopy-worker-subscription
   - Dead letter topic and subscription
   - Retry and ack deadline configuration
 
-- [ ] **11.4** Implement storage resources (`terraform/storage.tf`)
+- [ ] **12.4** Implement storage resources (`terraform/storage.tf`)
   - GCS bucket for coverage data
   - Versioning enabled
   - Lifecycle rules (90-day retention)
   - Uniform bucket-level access
 
-- [ ] **11.5** Implement IAM resources (`terraform/iam.tf`)
+- [ ] **12.5** Implement IAM resources (`terraform/iam.tf`)
   - Service account for initiator
   - Service account for worker
   - IAM bindings:
@@ -457,13 +545,13 @@ canopy/
     - Worker can read/write GCS
     - Worker can access secrets
 
-- [ ] **11.6** Implement Secret Manager resources (`terraform/secrets.tf`)
+- [ ] **12.6** Implement Secret Manager resources (`terraform/secrets.tf`)
   - Secret: webhook secret (for initiator)
   - Secret: GitHub App private key (for worker)
   - Secret versions
   - IAM bindings for secret access
 
-- [ ] **11.7** Implement Cloud Run services (`terraform/cloud_run.tf`)
+- [ ] **12.7** Implement Cloud Run services (`terraform/cloud_run.tf`)
   - Artifact Registry repository
   - Initiator Cloud Run service:
     - Mode: initiator
@@ -479,18 +567,18 @@ canopy/
     - Scaling: min 0, max 5
     - Longer timeout (10 minutes)
 
-- [ ] **11.8** Create outputs (`terraform/outputs.tf`)
+- [ ] **12.8** Create outputs (`terraform/outputs.tf`)
   - Initiator URL (webhook endpoint)
   - Worker URL
   - Coverage bucket name
 
-- [ ] **11.9** Create Terraform documentation
+- [ ] **12.9** Create Terraform documentation
   - Required GCP APIs to enable
   - Terraform initialization and apply steps
   - Variable configuration
   - GitHub App setup instructions
 
-- [ ] **11.10** Test Terraform deployment
+- [ ] **12.10** Test Terraform deployment
   - terraform init
   - terraform plan
   - terraform apply
@@ -498,9 +586,9 @@ canopy/
   - Test webhook delivery to Cloud Run
   - Verify worker processes messages
 
-### Phase 12: Documentation & Polish
+### Phase 13: Documentation & Polish
 
-- [ ] **12.1** Create comprehensive README.md
+- [ ] **13.1** Create comprehensive README.md
   - Project overview
   - Architecture diagram
   - Prerequisites
@@ -509,7 +597,7 @@ canopy/
   - Configuration reference
   - Troubleshooting guide
 
-- [ ] **12.2** Create Makefile
+- [ ] **13.2** Create Makefile
   - `make build` - Build binary
   - `make test` - Run tests
   - `make test-coverage` - Run tests with coverage report
@@ -518,19 +606,19 @@ canopy/
   - `make local-down` - Stop docker-compose
   - `make lint` - Run linter
 
-- [ ] **12.3** Create GitHub App setup guide
+- [ ] **13.3** Create GitHub App setup guide
   - App permissions required
   - Webhook event subscriptions
   - Installation instructions
   - Testing instructions
 
-- [ ] **12.4** Add logging throughout
+- [ ] **13.4** Add logging throughout
   - Structured logging (JSON format)
   - Log levels: debug, info, warn, error
   - Request ID tracking
   - Avoid logging secrets
 
-- [ ] **12.5** Add metrics/observability (optional)
+- [ ] **13.5** Add metrics/observability (optional)
   - Prometheus metrics endpoint
   - Key metrics: webhook requests, processing time, errors
   - Cloud Monitoring integration
@@ -638,17 +726,6 @@ test-coverage:
 - [ ] Terraform deploys successfully to GCP
 - [ ] End-to-end flow works: webhook → annotations on PR
 - [ ] Documentation complete and accurate
-
-## Timeline Estimate
-
-- Phase 1-3 (Foundation): ~2 days
-- Phase 4 (Coverage): ~2 days
-- Phase 5-7 (Services): ~3 days
-- Phase 8-9 (Testing): ~2 days
-- Phase 10-11 (Infra): ~2 days
-- Phase 12 (Docs): ~1 day
-
-**Total: ~12 days** (for single developer, working full-time)
 
 ## Next Steps
 
