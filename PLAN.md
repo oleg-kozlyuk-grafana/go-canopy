@@ -183,11 +183,12 @@ canopy/
   - GetCoverage() method (returns nil if not found)
   - Close() method
 
-- [ ] **3.2** Implement GCS adapter (`internal/storage/gcs.go`)
+- [x] **3.2** Implement GCS adapter (`internal/storage/gcs.go`)
   - Client initialization with credentials
   - Object path format: `{org}/{repo}/{branch}/coverage.out`
   - Upload with retry logic
   - Download with not-found handling
+  - Tests for validation and error handling
 
 - [ ] **3.3** Implement MinIO adapter (`internal/storage/minio.go`)
   - Client initialization (endpoint, credentials, SSL)
