@@ -1,0 +1,23 @@
+mode: set
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:30.74,32.21 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:32.21,34.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:37.2,37.46 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:37.46,39.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:42.2,43.27 2 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:43.27,45.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:48.2,49.16 2 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:49.16,51.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:54.2,59.47 4 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:59.47,61.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/hmac.go:63.2,63.12 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:58.51,60.33 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:60.33,62.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:65.2,66.33 2 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:66.33,68.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:73.2,74.47 2 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:74.47,76.3 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:78.2,78.12 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:82.48,83.26 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:83.26,84.15 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:84.15,86.4 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/initiator/validator.go:88.2,88.14 1 1

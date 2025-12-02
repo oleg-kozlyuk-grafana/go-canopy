@@ -263,7 +263,7 @@ canopy/
     - Test malformed header → returns error
     - Test constant-time comparison (timing attack resistance)
 
-- [ ] **5.2** Implement event validator (`internal/initiator/validator.go`)
+- [x] **5.2** Implement event validator (`internal/initiator/validator.go`)
   - Check event action == "completed"
   - Check org matches allowed list
   - Check workflow name in allowed list
