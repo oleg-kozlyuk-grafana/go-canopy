@@ -24,7 +24,7 @@ func NewGitBaseDiffSource(baseRef string, workDir string) *GitBaseDiffSource {
 	}
 }
 
-// GetDiff executes `git diff <base>...HEAD` and returns the unified diff output.
+// GetDiff executes `git diff <base>..HEAD` and returns the unified diff output.
 // The triple-dot syntax finds the merge-base between base and HEAD, then diffs from there.
 // This is ideal for PR contexts where you want all changes from the PR branch.
 func (s *GitBaseDiffSource) GetDiff(ctx context.Context) ([]byte, error) {
@@ -32,9 +32,9 @@ func (s *GitBaseDiffSource) GetDiff(ctx context.Context) ([]byte, error) {
 		return nil, fmt.Errorf("base ref is required")
 	}
 
-	// git diff <base>...HEAD shows all changes from the merge-base to HEAD
+	// git diff <base>..HEAD shows all changes from the merge-base to HEAD
 	// This captures all commits in a PR branch relative to the base branch
-	cmd := exec.CommandContext(ctx, "git", "diff", s.BaseRef+"...HEAD")
+	cmd := exec.CommandContext(ctx, "git", "diff", s.BaseRef+"..HEAD")
 	if s.WorkDir != "" {
 		cmd.Dir = s.WorkDir
 	}

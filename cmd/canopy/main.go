@@ -61,7 +61,7 @@ func init() {
 	// Define flags
 	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files")
 	rootCmd.Flags().StringVar(&format, "format", "Text", "Output format (Text, Markdown, GitHubAnnotations)")
-	rootCmd.Flags().StringVar(&baseRef, "base", "", "Analyze diff against base ref (uses git diff <base>...HEAD)")
+	rootCmd.Flags().StringVar(&baseRef, "base", "", "Analyze diff against base ref (uses git diff <base>..HEAD)")
 	rootCmd.Flags().StringVar(&commitSHA, "commit", "", "Analyze diff for a specific commit (uses git diff-tree)")
 }
 
