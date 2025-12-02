@@ -13,6 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
+	"github.com/oleg-kozlyuk/canopy/internal/testutil"
 )
 
 // TestMinIOStorage_Integration runs integration tests against a real MinIO instance.
@@ -20,6 +21,9 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
+
+	// Configure Ryuk for Podman compatibility
+	testutil.ConfigureRyuk()
 
 	ctx := context.Background()
 
@@ -33,12 +37,12 @@ func TestMinIOStorage_Integration(t *testing.T) {
 		},
 		Cmd:        []string{"server", "/data"},
 		WaitingFor: wait.ForHTTP("/minio/health/ready").WithPort("9000").WithStartupTimeout(60 * time.Second),
-		SkipReaper: true, // Skip reaper to avoid network issues
 	}
 
 	minioContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		ProviderType:     testutil.DetectContainerProvider(),
 	})
 	require.NoError(t, err)
 	defer func() {
@@ -306,6 +310,9 @@ func TestMinIOStorage_ErrorScenarios(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	// Configure Ryuk for Podman compatibility
+	testutil.ConfigureRyuk()
+
 	ctx := context.Background()
 
 	// Start MinIO container
@@ -318,12 +325,12 @@ func TestMinIOStorage_ErrorScenarios(t *testing.T) {
 		},
 		Cmd:        []string{"server", "/data"},
 		WaitingFor: wait.ForHTTP("/minio/health/ready").WithPort("9000").WithStartupTimeout(60 * time.Second),
-		SkipReaper: true, // Skip reaper to avoid network issues
 	}
 
 	minioContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		ProviderType:     testutil.DetectContainerProvider(),
 	})
 	require.NoError(t, err)
 	defer func() {
@@ -395,6 +402,9 @@ func TestMinIOStorage_BucketCreation(t *testing.T) {
 		t.Skip("skipping integration test")
 	}
 
+	// Configure Ryuk for Podman compatibility
+	testutil.ConfigureRyuk()
+
 	ctx := context.Background()
 
 	// Start MinIO container
@@ -407,12 +417,12 @@ func TestMinIOStorage_BucketCreation(t *testing.T) {
 		},
 		Cmd:        []string{"server", "/data"},
 		WaitingFor: wait.ForHTTP("/minio/health/ready").WithPort("9000").WithStartupTimeout(60 * time.Second),
-		SkipReaper: true, // Skip reaper to avoid network issues
 	}
 
 	minioContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+		ProviderType:     testutil.DetectContainerProvider(),
 	})
 	require.NoError(t, err)
 	defer func() {
