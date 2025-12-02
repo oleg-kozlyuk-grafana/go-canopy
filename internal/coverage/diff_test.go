@@ -152,9 +152,9 @@ index 1111111..2222222 100644
 
 func TestGetAddedLinesByFile(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		fileDiffs []*FileDiff
-		expected map[string][]int
+		expected  map[string][]int
 	}{
 		{
 			name: "single file with additions",

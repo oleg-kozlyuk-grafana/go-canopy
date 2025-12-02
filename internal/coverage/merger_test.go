@@ -418,9 +418,9 @@ func TestMergeCount(t *testing.T) {
 
 func TestMakeBlockKey(t *testing.T) {
 	tests := []struct {
-		name      string
-		block1    ProfileBlock
-		block2    ProfileBlock
+		name        string
+		block1      ProfileBlock
+		block2      ProfileBlock
 		shouldMatch bool
 	}{
 		{

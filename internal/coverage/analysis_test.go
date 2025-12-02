@@ -3,18 +3,19 @@ package coverage
 import (
 	"testing"
 
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAnalyzeCoverage(t *testing.T) {
 	tests := []struct {
-		name                   string
-		profiles               []*Profile
-		addedLinesByFile       map[string][]int
+		name                    string
+		profiles                []*Profile
+		addedLinesByFile        map[string][]int
 		expectedUncoveredByFile map[string][]int
-		expectedAdded          int
-		expectedTotalUncovered int
+		expectedAdded           int
+		expectedTotalUncovered  int
 	}{
 		{
 			name: "all lines covered",
@@ -32,7 +33,7 @@ func TestAnalyzeCoverage(t *testing.T) {
 				"main.go": {3, 7},
 			},
 			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:      2,
+			expectedAdded:           2,
 			expectedTotalUncovered:  0,
 		},
 		{
@@ -53,7 +54,7 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"main.go": {7, 9},
 			},
-			expectedAdded:     3,
+			expectedAdded:          3,
 			expectedTotalUncovered: 2,
 		},
 		{
@@ -104,12 +105,12 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedTotalUncovered: 1, // only 1 uncovered (line 20 is ignored as non-instrumented)
 		},
 		{
-			name:             "empty diff",
-			profiles:         []*Profile{},
-			addedLinesByFile: map[string][]int{},
+			name:                    "empty diff",
+			profiles:                []*Profile{},
+			addedLinesByFile:        map[string][]int{},
 			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:0,
-			expectedTotalUncovered:0,
+			expectedAdded:           0,
+			expectedTotalUncovered:  0,
 		},
 		{
 			name: "file with coverage not in diff",
@@ -158,8 +159,8 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"internal/server/handler.go": {15},
 			},
-			expectedAdded:2,
-			expectedTotalUncovered:1,
+			expectedAdded:          2,
+			expectedTotalUncovered: 1,
 		},
 		{
 			name: "non-instrumented lines are ignored",
@@ -191,76 +192,6 @@ func TestAnalyzeCoverage(t *testing.T) {
 			assert.Equal(t, tt.expectedUncoveredByFile, result.UncoveredByFile)
 			assert.Equal(t, tt.expectedAdded, result.TotalAdded)
 			assert.Equal(t, tt.expectedTotalUncovered, result.TotalUncovered)
-		})
-	}
-}
-
-func TestFindMatchingProfile(t *testing.T) {
-	profiles := []*Profile{
-		{FileName: "github.com/org/repo/main.go"},
-		{FileName: "github.com/org/repo/internal/server/handler.go"},
-		{FileName: "github.com/org/repo/internal/coverage/parser.go"},
-		{FileName: "simple.go"}, // relative path
-	}
-
-	profilesByFile := make(map[string]*Profile)
-	for _, p := range profiles {
-		profilesByFile[p.FileName] = p
-	}
-
-	tests := []struct {
-		name          string
-		diffFile      string
-		expectedFound bool
-		expectedFile  string
-	}{
-		{
-			name:          "exact match",
-			diffFile:      "simple.go",
-			expectedFound: true,
-			expectedFile:  "simple.go",
-		},
-		{
-			name:          "suffix match - simple",
-			diffFile:      "main.go",
-			expectedFound: true,
-			expectedFile:  "github.com/org/repo/main.go",
-		},
-		{
-			name:          "suffix match - nested path",
-			diffFile:      "internal/server/handler.go",
-			expectedFound: true,
-			expectedFile:  "github.com/org/repo/internal/server/handler.go",
-		},
-		{
-			name:          "suffix match - deeper nested",
-			diffFile:      "coverage/parser.go",
-			expectedFound: true,
-			expectedFile:  "github.com/org/repo/internal/coverage/parser.go",
-		},
-		{
-			name:          "no match",
-			diffFile:      "notfound.go",
-			expectedFound: false,
-		},
-		{
-			name:          "partial filename no match",
-			diffFile:      "handler.go",
-			expectedFound: true,
-			expectedFile:  "github.com/org/repo/internal/server/handler.go",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			profile := findMatchingProfile(profilesByFile, tt.diffFile)
-
-			if tt.expectedFound {
-				require.NotNil(t, profile, "expected to find a matching profile")
-				assert.Equal(t, tt.expectedFile, profile.FileName)
-			} else {
-				assert.Nil(t, profile, "expected no matching profile")
-			}
 		})
 	}
 }
@@ -510,4 +441,421 @@ func TestAnalyzeCoverage_EdgeCases(t *testing.T) {
 		assert.Equal(t, 1, result.TotalAdded)
 		assert.Equal(t, 0, result.TotalUncovered)
 	})
+}
+
+func TestCalculateCoverageStats(t *testing.T) {
+	tests := []struct {
+		name                   string
+		profiles               []*Profile
+		expectedTotal          int
+		expectedCovered        int
+		expectedPercentage     float64
+		expectedFileCount      int
+		checkSpecificFile      string
+		expectedFileTotal      int
+		expectedFileCovered    int
+		expectedFilePercentage float64
+	}{
+		{
+			name: "single file fully covered",
+			profiles: []*Profile{
+				{
+					FileName: "main.go",
+					Blocks: []ProfileBlock{
+						{NumStmt: 5, Count: 10},
+						{NumStmt: 3, Count: 5},
+					},
+				},
+			},
+			expectedTotal:          8,
+			expectedCovered:        8,
+			expectedPercentage:     100.0,
+			expectedFileCount:      1,
+			checkSpecificFile:      "main.go",
+			expectedFileTotal:      8,
+			expectedFileCovered:    8,
+			expectedFilePercentage: 100.0,
+		},
+		{
+			name: "single file partially covered",
+			profiles: []*Profile{
+				{
+					FileName: "handler.go",
+					Blocks: []ProfileBlock{
+						{NumStmt: 10, Count: 5}, // covered
+						{NumStmt: 10, Count: 0}, // not covered
+					},
+				},
+			},
+			expectedTotal:          20,
+			expectedCovered:        10,
+			expectedPercentage:     50.0,
+			expectedFileCount:      1,
+			checkSpecificFile:      "handler.go",
+			expectedFileTotal:      20,
+			expectedFileCovered:    10,
+			expectedFilePercentage: 50.0,
+		},
+		{
+			name: "multiple files mixed coverage",
+			profiles: []*Profile{
+				{
+					FileName: "server.go",
+					Blocks: []ProfileBlock{
+						{NumStmt: 10, Count: 1},
+						{NumStmt: 10, Count: 0},
+					},
+				},
+				{
+					FileName: "client.go",
+					Blocks: []ProfileBlock{
+						{NumStmt: 5, Count: 2},
+						{NumStmt: 5, Count: 3},
+					},
+				},
+			},
+			expectedTotal:          30,
+			expectedCovered:        20,
+			expectedPercentage:     66.66666666666666,
+			expectedFileCount:      2,
+			checkSpecificFile:      "server.go",
+			expectedFileTotal:      20,
+			expectedFileCovered:    10,
+			expectedFilePercentage: 50.0,
+		},
+		{
+			name:               "no profiles",
+			profiles:           []*Profile{},
+			expectedTotal:      0,
+			expectedCovered:    0,
+			expectedPercentage: 0.0,
+			expectedFileCount:  0,
+		},
+		{
+			name: "file with no coverage",
+			profiles: []*Profile{
+				{
+					FileName: "unused.go",
+					Blocks: []ProfileBlock{
+						{NumStmt: 15, Count: 0},
+						{NumStmt: 10, Count: 0},
+					},
+				},
+			},
+			expectedTotal:          25,
+			expectedCovered:        0,
+			expectedPercentage:     0.0,
+			expectedFileCount:      1,
+			checkSpecificFile:      "unused.go",
+			expectedFileTotal:      25,
+			expectedFileCovered:    0,
+			expectedFilePercentage: 0.0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stats := CalculateCoverageStats(tt.profiles)
+
+			assert.Equal(t, tt.expectedTotal, stats.TotalStatements)
+			assert.Equal(t, tt.expectedCovered, stats.CoveredStatements)
+			assert.Equal(t, tt.expectedPercentage, stats.Percentage)
+			assert.Equal(t, tt.expectedFileCount, len(stats.ByFile))
+
+			// Check specific file if specified
+			if tt.checkSpecificFile != "" {
+				fileStats, ok := stats.ByFile[tt.checkSpecificFile]
+				require.True(t, ok, "expected file %s in ByFile map", tt.checkSpecificFile)
+				assert.Equal(t, tt.checkSpecificFile, fileStats.FileName)
+				assert.Equal(t, tt.expectedFileTotal, fileStats.TotalStatements)
+				assert.Equal(t, tt.expectedFileCovered, fileStats.CoveredStatements)
+				assert.Equal(t, tt.expectedFilePercentage, fileStats.Percentage)
+			}
+		})
+	}
+}
+
+func TestCompareCoverage(t *testing.T) {
+	tests := []struct {
+		name              string
+		base              *CoverageStats
+		head              *CoverageStats
+		expectedBase      float64
+		expectedHead      float64
+		expectedDelta     float64
+		expectedDecreased bool
+	}{
+		{
+			name: "coverage increased",
+			base: &CoverageStats{
+				Percentage: 50.0,
+			},
+			head: &CoverageStats{
+				Percentage: 75.0,
+			},
+			expectedBase:      50.0,
+			expectedHead:      75.0,
+			expectedDelta:     25.0,
+			expectedDecreased: false,
+		},
+		{
+			name: "coverage decreased",
+			base: &CoverageStats{
+				Percentage: 80.0,
+			},
+			head: &CoverageStats{
+				Percentage: 60.0,
+			},
+			expectedBase:      80.0,
+			expectedHead:      60.0,
+			expectedDelta:     -20.0,
+			expectedDecreased: true,
+		},
+		{
+			name: "coverage unchanged",
+			base: &CoverageStats{
+				Percentage: 70.0,
+			},
+			head: &CoverageStats{
+				Percentage: 70.0,
+			},
+			expectedBase:      70.0,
+			expectedHead:      70.0,
+			expectedDelta:     0.0,
+			expectedDecreased: false,
+		},
+		{
+			name: "nil base (first coverage report)",
+			base: nil,
+			head: &CoverageStats{
+				Percentage: 65.0,
+			},
+			expectedBase:      0.0,
+			expectedHead:      65.0,
+			expectedDelta:     65.0,
+			expectedDecreased: false,
+		},
+		{
+			name: "nil head",
+			base: &CoverageStats{
+				Percentage: 50.0,
+			},
+			head:              nil,
+			expectedBase:      50.0,
+			expectedHead:      0.0,
+			expectedDelta:     -50.0,
+			expectedDecreased: true,
+		},
+		{
+			name:              "both nil",
+			base:              nil,
+			head:              nil,
+			expectedBase:      0.0,
+			expectedHead:      0.0,
+			expectedDelta:     0.0,
+			expectedDecreased: false,
+		},
+		{
+			name: "small increase",
+			base: &CoverageStats{
+				Percentage: 75.5,
+			},
+			head: &CoverageStats{
+				Percentage: 75.6,
+			},
+			expectedBase:      75.5,
+			expectedHead:      75.6,
+			expectedDelta:     0.09999999999999432, // float precision
+			expectedDecreased: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			comparison := CompareCoverage(tt.base, tt.head)
+
+			assert.Equal(t, tt.expectedBase, comparison.BaseCoverage)
+			assert.Equal(t, tt.expectedHead, comparison.HeadCoverage)
+			assert.InDelta(t, tt.expectedDelta, comparison.Delta, 0.0001) // use InDelta for float comparison
+			assert.Equal(t, tt.expectedDecreased, comparison.Decreased)
+		})
+	}
+}
+
+func TestGenerateAnnotations(t *testing.T) {
+	tests := []struct {
+		name                string
+		result              *AnalysisResult
+		expectedAnnotations []*github.Annotation
+	}{
+		{
+			name: "single file with non-consecutive lines",
+			result: &AnalysisResult{
+				UncoveredByFile: map[string][]int{
+					"main.go": {5, 10, 15},
+				},
+			},
+			expectedAnnotations: []*github.Annotation{
+				{
+					Path:      "main.go",
+					StartLine: 5,
+					EndLine:   5,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 5 is not covered by tests",
+				},
+				{
+					Path:      "main.go",
+					StartLine: 10,
+					EndLine:   10,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 10 is not covered by tests",
+				},
+				{
+					Path:      "main.go",
+					StartLine: 15,
+					EndLine:   15,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 15 is not covered by tests",
+				},
+			},
+		},
+		{
+			name: "consecutive lines grouped into range",
+			result: &AnalysisResult{
+				UncoveredByFile: map[string][]int{
+					"server.go": {5, 6, 7, 10, 11, 15},
+				},
+			},
+			expectedAnnotations: []*github.Annotation{
+				{
+					Path:      "server.go",
+					StartLine: 5,
+					EndLine:   7,
+					Level:     "notice",
+					Title:     "Uncovered lines",
+					Message:   "Lines 5-7 are not covered by tests",
+				},
+				{
+					Path:      "server.go",
+					StartLine: 10,
+					EndLine:   11,
+					Level:     "notice",
+					Title:     "Uncovered lines",
+					Message:   "Lines 10-11 are not covered by tests",
+				},
+				{
+					Path:      "server.go",
+					StartLine: 15,
+					EndLine:   15,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 15 is not covered by tests",
+				},
+			},
+		},
+		{
+			name: "multiple files sorted alphabetically",
+			result: &AnalysisResult{
+				UncoveredByFile: map[string][]int{
+					"zebra.go": {1, 2, 3},
+					"alpha.go": {10},
+					"bravo.go": {20, 21},
+				},
+			},
+			expectedAnnotations: []*github.Annotation{
+				{
+					Path:      "alpha.go",
+					StartLine: 10,
+					EndLine:   10,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 10 is not covered by tests",
+				},
+				{
+					Path:      "bravo.go",
+					StartLine: 20,
+					EndLine:   21,
+					Level:     "notice",
+					Title:     "Uncovered lines",
+					Message:   "Lines 20-21 are not covered by tests",
+				},
+				{
+					Path:      "zebra.go",
+					StartLine: 1,
+					EndLine:   3,
+					Level:     "notice",
+					Title:     "Uncovered lines",
+					Message:   "Lines 1-3 are not covered by tests",
+				},
+			},
+		},
+		{
+			name:                "nil result",
+			result:              nil,
+			expectedAnnotations: nil,
+		},
+		{
+			name: "no uncovered lines",
+			result: &AnalysisResult{
+				UncoveredByFile: map[string][]int{},
+			},
+			expectedAnnotations: nil,
+		},
+		{
+			name: "unsorted lines are sorted and grouped",
+			result: &AnalysisResult{
+				UncoveredByFile: map[string][]int{
+					"test.go": {15, 10, 12, 11, 5},
+				},
+			},
+			expectedAnnotations: []*github.Annotation{
+				{
+					Path:      "test.go",
+					StartLine: 5,
+					EndLine:   5,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 5 is not covered by tests",
+				},
+				{
+					Path:      "test.go",
+					StartLine: 10,
+					EndLine:   12,
+					Level:     "notice",
+					Title:     "Uncovered lines",
+					Message:   "Lines 10-12 are not covered by tests",
+				},
+				{
+					Path:      "test.go",
+					StartLine: 15,
+					EndLine:   15,
+					Level:     "notice",
+					Title:     "Uncovered line",
+					Message:   "Line 15 is not covered by tests",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			annotations := GenerateAnnotations(tt.result)
+
+			assert.Equal(t, len(tt.expectedAnnotations), len(annotations))
+			for i, expected := range tt.expectedAnnotations {
+				if i < len(annotations) {
+					actual := annotations[i]
+					assert.Equal(t, expected.Path, actual.Path, "annotation %d path mismatch", i)
+					assert.Equal(t, expected.StartLine, actual.StartLine, "annotation %d start line mismatch", i)
+					assert.Equal(t, expected.EndLine, actual.EndLine, "annotation %d end line mismatch", i)
+					assert.Equal(t, expected.Level, actual.Level, "annotation %d level mismatch", i)
+					assert.Equal(t, expected.Title, actual.Title, "annotation %d title mismatch", i)
+					assert.Equal(t, expected.Message, actual.Message, "annotation %d message mismatch", i)
+				}
+			}
+		})
+	}
 }

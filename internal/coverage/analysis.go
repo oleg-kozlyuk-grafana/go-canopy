@@ -1,8 +1,11 @@
 package coverage
 
 import (
+	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/github"
 )
 
 // AnalysisResult contains the results of coverage analysis.
@@ -86,31 +89,6 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 	return result
 }
 
-// findMatchingProfile finds a coverage profile that matches the given diff filename.
-// Coverage files use full module paths (e.g., "github.com/org/repo/internal/server/handler.go")
-// while diff files use relative paths (e.g., "internal/server/handler.go").
-// Returns the matching profile or nil if not found.
-func findMatchingProfile(profilesByFile map[string]*Profile, diffFile string) *Profile {
-	// First try exact match (in case coverage uses relative paths too)
-	if profile, ok := profilesByFile[diffFile]; ok {
-		return profile
-	}
-
-	// Try suffix match: find a profile whose filename ends with the diff filename
-	for coverageFile, profile := range profilesByFile {
-		if strings.HasSuffix(coverageFile, diffFile) {
-			return profile
-		}
-		// Also try with "/" prefix to avoid partial matches
-		// e.g., "handler.go" shouldn't match "myhandler.go"
-		if strings.HasSuffix(coverageFile, "/"+diffFile) {
-			return profile
-		}
-	}
-
-	return nil
-}
-
 // isLineInstrumented checks if a line falls within any coverage block.
 // Returns true if the line is in ANY block (regardless of count).
 // Lines not in any block are non-executable (comments, blank lines, etc.) and should be ignored.
@@ -163,4 +141,141 @@ func (r *AnalysisResult) GetSortedFiles() []string {
 	}
 	sort.Strings(files)
 	return files
+}
+
+// CoverageStats holds coverage statistics.
+type CoverageStats struct {
+	TotalStatements   int
+	CoveredStatements int
+	Percentage        float64
+	ByFile            map[string]*FileCoverage
+}
+
+// FileCoverage holds coverage statistics for a single file.
+type FileCoverage struct {
+	FileName          string
+	TotalStatements   int
+	CoveredStatements int
+	Percentage        float64
+}
+
+// CalculateCoverageStats calculates coverage statistics from profiles.
+// It computes overall coverage percentage and per-file breakdown.
+// Coverage is calculated as: (covered statements / total statements) * 100
+func CalculateCoverageStats(profiles []*Profile) *CoverageStats {
+	stats := &CoverageStats{
+		ByFile: make(map[string]*FileCoverage),
+	}
+
+	if len(profiles) == 0 {
+		return stats
+	}
+
+	// Process each profile to calculate per-file and overall stats
+	for _, profile := range profiles {
+		fileStats := &FileCoverage{
+			FileName: profile.FileName,
+		}
+
+		// Count statements in each block
+		for _, block := range profile.Blocks {
+			fileStats.TotalStatements += block.NumStmt
+			if block.Count > 0 {
+				fileStats.CoveredStatements += block.NumStmt
+			}
+		}
+
+		// Calculate per-file percentage
+		if fileStats.TotalStatements > 0 {
+			fileStats.Percentage = float64(fileStats.CoveredStatements) / float64(fileStats.TotalStatements) * 100
+		}
+
+		// Add to per-file map
+		stats.ByFile[profile.FileName] = fileStats
+
+		// Accumulate overall stats
+		stats.TotalStatements += fileStats.TotalStatements
+		stats.CoveredStatements += fileStats.CoveredStatements
+	}
+
+	// Calculate overall percentage
+	if stats.TotalStatements > 0 {
+		stats.Percentage = float64(stats.CoveredStatements) / float64(stats.TotalStatements) * 100
+	}
+
+	return stats
+}
+
+// CoverageComparison holds the result of comparing two coverage reports.
+type CoverageComparison struct {
+	BaseCoverage float64
+	HeadCoverage float64
+	Delta        float64 // positive = improvement, negative = regression
+	Decreased    bool
+}
+
+// CompareCoverage compares base and head coverage stats.
+// Returns a comparison showing the delta between base and head.
+// If base is nil, it's treated as 0% coverage (first coverage report).
+func CompareCoverage(base, head *CoverageStats) *CoverageComparison {
+	comparison := &CoverageComparison{}
+
+	if head != nil {
+		comparison.HeadCoverage = head.Percentage
+	}
+
+	if base != nil {
+		comparison.BaseCoverage = base.Percentage
+	}
+
+	// Calculate delta: positive means improvement, negative means regression
+	comparison.Delta = comparison.HeadCoverage - comparison.BaseCoverage
+	comparison.Decreased = comparison.Delta < 0
+
+	return comparison
+}
+
+// GenerateAnnotations converts analysis result to GitHub Check Run annotations.
+// Uses github.GroupIntoRanges to merge consecutive lines into ranges.
+// Returns annotations with "notice" level as per GitHub Check Run API format.
+func GenerateAnnotations(result *AnalysisResult) []*github.Annotation {
+	if result == nil || len(result.UncoveredByFile) == 0 {
+		return nil
+	}
+
+	var annotations []*github.Annotation
+
+	// Process each file (in sorted order for consistency)
+	sortedFiles := result.GetSortedFiles()
+	for _, file := range sortedFiles {
+		lines := result.UncoveredByFile[file]
+
+		// Group consecutive lines into ranges
+		ranges := github.SortAndGroupLines(lines)
+
+		// Create one annotation per range
+		for _, r := range ranges {
+			var title, message string
+			if r.Start == r.End {
+				// Single line
+				title = "Uncovered line"
+				message = fmt.Sprintf("Line %d is not covered by tests", r.Start)
+			} else {
+				// Range of lines
+				title = "Uncovered lines"
+				message = fmt.Sprintf("Lines %d-%d are not covered by tests", r.Start, r.End)
+			}
+
+			annotations = append(annotations, &github.Annotation{
+				Path:      file,
+				StartLine: r.Start,
+				EndLine:   r.End,
+				Level:     "notice",
+				Title:     title,
+				Message:   message,
+			})
+		}
+	}
+
+	return annotations
 }

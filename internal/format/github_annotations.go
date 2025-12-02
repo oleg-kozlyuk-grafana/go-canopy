@@ -3,7 +3,6 @@ package format
 import (
 	"fmt"
 	"io"
-	"sort"
 
 	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
 )
@@ -11,12 +10,6 @@ import (
 // GitHubAnnotationsFormatter formats analysis results as GitHub Actions workflow commands.
 // Outputs one ::notice annotation per block of consecutive uncovered lines.
 type GitHubAnnotationsFormatter struct{}
-
-// lineRange represents a range of consecutive line numbers.
-type lineRange struct {
-	start int
-	end   int
-}
 
 // Format formats the analysis result as GitHub Actions annotations.
 func (f *GitHubAnnotationsFormatter) Format(result *coverage.AnalysisResult, w io.Writer) error {
@@ -27,67 +20,28 @@ func (f *GitHubAnnotationsFormatter) Format(result *coverage.AnalysisResult, w i
 	// Handle case where all lines are covered
 	if !result.HasUncoveredLines() {
 		if result.TotalAdded == 0 {
-			fmt.Fprintln(w, "No lines added in diff")
+			fmt.Fprintln(w, "::notice No lines added in diff")
 			return nil
 		}
-		fmt.Fprintln(w, "All added lines are covered!")
+		fmt.Fprintln(w, "::notice All added lines are covered")
 		return nil
 	}
 
-	// Print annotations for each file (sorted alphabetically)
-	sortedFiles := result.GetSortedFiles()
-	for _, file := range sortedFiles {
-		lines := result.UncoveredByFile[file]
+	// Generate annotations using the coverage package
+	annotations := coverage.GenerateAnnotations(result)
 
-		// Ensure lines are sorted
-		sortedLines := make([]int, len(lines))
-		copy(sortedLines, lines)
-		sort.Ints(sortedLines)
-
-		// Group consecutive lines into ranges
-		ranges := groupIntoRanges(sortedLines)
-
-		// Create one annotation per range
-		for _, r := range ranges {
-			if r.start == r.end {
-				// Single line
-				fmt.Fprintf(w, "::notice file=%s,line=%d,title=Uncovered line::Line %d is not covered by tests\n",
-					file, r.start, r.start)
-			} else {
-				// Range of lines
-				fmt.Fprintf(w, "::notice file=%s,line=%d,endLine=%d,title=Uncovered lines::Lines %d-%d are not covered by tests\n",
-					file, r.start, r.end, r.start, r.end)
-			}
+	// Format each annotation as a GitHub Actions workflow command
+	for _, annotation := range annotations {
+		if annotation.StartLine == annotation.EndLine {
+			// Single line annotation
+			fmt.Fprintf(w, "::notice file=%s,line=%d,title=%s::%s\n",
+				annotation.Path, annotation.StartLine, annotation.Title, annotation.Message)
+		} else {
+			// Multi-line annotation
+			fmt.Fprintf(w, "::notice file=%s,line=%d,endLine=%d,title=%s::%s\n",
+				annotation.Path, annotation.StartLine, annotation.EndLine, annotation.Title, annotation.Message)
 		}
 	}
 
 	return nil
-}
-
-// groupIntoRanges groups consecutive line numbers into ranges.
-func groupIntoRanges(lines []int) []lineRange {
-	if len(lines) == 0 {
-		return nil
-	}
-
-	var ranges []lineRange
-	rangeStart := lines[0]
-	rangeEnd := lines[0]
-
-	for i := 1; i < len(lines); i++ {
-		if lines[i] == rangeEnd+1 {
-			// Continue the range
-			rangeEnd = lines[i]
-		} else {
-			// End the current range and start a new one
-			ranges = append(ranges, lineRange{start: rangeStart, end: rangeEnd})
-			rangeStart = lines[i]
-			rangeEnd = lines[i]
-		}
-	}
-
-	// Append the final range
-	ranges = append(ranges, lineRange{start: rangeStart, end: rangeEnd})
-
-	return ranges
 }
