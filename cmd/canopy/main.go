@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/diff"
 	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/local"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,7 @@ var (
 	// CLI flags
 	coveragePath string
 	format       string
+	commitSHA    string
 )
 
 func main() {
@@ -58,12 +60,25 @@ func init() {
 	// Define flags
 	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files")
 	rootCmd.Flags().StringVar(&format, "format", "Text", "Output format (Text, Markdown, GitHubAnnotations)")
+	rootCmd.Flags().StringVar(&commitSHA, "commit", "", "Analyze diff for a specific commit (uses git diff-tree)")
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// Create appropriate DiffSource based on flags (hierarchy-based selection)
+	var diffSource diff.DiffSource
+
+	if commitSHA != "" {
+		// Explicit --commit flag takes priority
+		diffSource = diff.NewGitCommitDiffSource(commitSHA, "")
+	} else {
+		// Default: use local git diff
+		diffSource = diff.NewLocalDiffSource("")
+	}
+
 	runner := local.NewRunner(local.Config{
 		CoveragePath: coveragePath,
 		Format:       format,
-	})
+	}, local.WithDiffSource(diffSource))
+
 	return runner.Run(context.Background())
 }

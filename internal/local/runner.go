@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 
 	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/diff"
 	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/format"
 )
 
@@ -20,28 +20,46 @@ type Config struct {
 
 // Runner handles local coverage analysis.
 type Runner struct {
-	config Config
+	config     Config
+	diffSource diff.DiffSource
+}
+
+// Option is a functional option for configuring Runner.
+type Option func(*Runner)
+
+// WithDiffSource sets a custom DiffSource for the Runner.
+func WithDiffSource(ds diff.DiffSource) Option {
+	return func(r *Runner) {
+		r.diffSource = ds
+	}
 }
 
 // NewRunner creates a new Runner with the given configuration.
-func NewRunner(config Config) *Runner {
-	return &Runner{
-		config: config,
+func NewRunner(config Config, opts ...Option) *Runner {
+	r := &Runner{
+		config:     config,
+		diffSource: diff.NewLocalDiffSource(""), // Default to local diff
 	}
+
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	return r
 }
 
 // Run executes the local coverage analysis workflow.
 // It returns an error if any step fails, but always exits with code 0 (as required).
 func (r *Runner) Run(ctx context.Context) error {
-	// Step 1: Get git diff
-	diffData, err := r.getGitDiff(ctx)
+	// Step 1: Get diff using the configured DiffSource
+	diffData, err := r.diffSource.GetDiff(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get git diff: %w", err)
+		return fmt.Errorf("failed to get diff: %w", err)
 	}
 
 	// Check if diff is empty
 	if len(diffData) == 0 {
-		fmt.Println("No changes detected in git diff")
+		fmt.Println("No changes detected in diff")
 		return nil
 	}
 
@@ -80,31 +98,6 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// getGitDiff executes `git diff` and returns the output.
-// It first runs `git add -N .` to mark new untracked files as intent-to-add,
-// which allows them to appear in the diff output.
-func (r *Runner) getGitDiff(ctx context.Context) ([]byte, error) {
-	// Add untracked files as intent-to-add so they show up in diff
-	addCmd := exec.CommandContext(ctx, "git", "add", "-N", ".")
-	if err := addCmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("git add -N failed: %s", string(exitErr.Stderr))
-		}
-		return nil, err
-	}
-
-	// Now run git diff to get all changes including new files
-	cmd := exec.CommandContext(ctx, "git", "diff")
-	output, err := cmd.Output()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("git diff failed: %s", string(exitErr.Stderr))
-		}
-		return nil, err
-	}
-	return output, nil
 }
 
 // readAndMergeCoverageFiles reads all *.out files from the coverage directory
