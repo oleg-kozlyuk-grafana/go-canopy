@@ -4,16 +4,51 @@ This folder contains scaffold for project Canopy, a small service that helps imp
 
 ## Architecture
 
-This project should be a monolithic executable, deployed in 2 modes:
+This project consists of separate executables for different deployment scenarios:
 
-* all-in-one mode for local deployments and testing
-* split mode with "initiator" and "worker"
+* `canopy` - Local coverage analysis tool (analyzes local coverage against git diff)
+* `canopy-initiator` - GitHub webhook handler for production
+* `canopy-worker` - Coverage processor for production
+* `canopy-all-in-one` - Combined initiator + worker for local development/testing
+
+### Production Architecture
 
 In PROD, the architecture is:
 
-GitHub --webhook-> Initiator --message queue->worker
+```
+GitHub --webhook-> canopy-initiator --message queue-> canopy-worker
+                        |                                    |
+                        |                                    |
+                    (No GitHub creds)              (GitHub creds + Storage)
+```
 
 Deployment is planned in GCP using Terraform, Cloud Run and Pub/Sub as message queue
+
+### Executables
+
+**canopy** - Local development tool
+- Analyzes local coverage files against current git diff
+- No server, no external dependencies
+- Usage: `canopy --coverage .coverage`
+
+**canopy-initiator** - Production webhook handler
+- Receives GitHub workflow_run webhooks
+- Validates HMAC signatures
+- Publishes work requests to message queue
+- Does NOT have GitHub credentials (least privilege)
+- Flags: `--port`, `--disable-hmac`
+
+**canopy-worker** - Production coverage processor
+- Subscribes to message queue
+- Downloads artifacts, processes coverage
+- Creates GitHub check runs and comments
+- Has GitHub credentials and storage access
+- No CLI flags (configured via environment variables)
+
+**canopy-all-in-one** - Local development mode
+- Runs both initiator and worker in single process
+- Typically uses in-memory queue and MinIO storage
+- Flags: `--port`, `--disable-hmac`
 
 ## Security
 
@@ -55,6 +90,39 @@ If all conditions are satisfied, it sends a work request to worker via message q
 
 ## Developer modes
 
-- all-in-one mode
-- -disable-hmac to disable HMAC validation for local development
-- docker compose with Redis as message queue and minio as s3
+### Local Coverage Analysis
+```bash
+# Analyze local coverage against git diff
+canopy --coverage .coverage
+```
+
+### All-in-One Development Mode
+```bash
+# Run both initiator and worker together
+canopy-all-in-one --port 8080 --disable-hmac
+```
+
+- Uses in-memory queue or Redis (configurable via env vars)
+- Uses MinIO for storage (via docker-compose)
+- `--disable-hmac` flag disables HMAC validation for local webhooks
+
+### Docker Compose
+```bash
+# Start Redis and MinIO for local testing
+make local-up
+
+# Then run all-in-one mode
+make run-all-in-one
+```
+
+### Building
+```bash
+# Build all executables
+make build-all
+
+# Or build individually
+make build-canopy
+make build-initiator
+make build-worker
+make build-all-in-one
+```

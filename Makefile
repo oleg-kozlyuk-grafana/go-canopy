@@ -1,13 +1,23 @@
-.PHONY: help build test test-coverage lint docker-build local-up local-down clean deps
+.PHONY: help build build-all build-canopy build-initiator build-worker build-all-in-one test test-coverage lint docker-build local-up local-down clean deps
 
 # Variables
-BINARY_NAME=canopy
 BUILD_DIR=.
-CMD_DIR=./cmd/canopy
 DOCKER_IMAGE=canopy:latest
 DOCKER_COMPOSE_FILE=deployments/docker-compose.yml
 COVERAGE_FILE=.coverage/coverage.out
 COVERAGE_HTML=.coverage/report.html
+
+# Executables
+CANOPY_BINARY=canopy
+INITIATOR_BINARY=canopy-initiator
+WORKER_BINARY=canopy-worker
+ALL_IN_ONE_BINARY=canopy-all-in-one
+
+# Command directories
+CANOPY_CMD=./cmd/canopy
+INITIATOR_CMD=./cmd/initiator
+WORKER_CMD=./cmd/worker
+ALL_IN_ONE_CMD=./cmd/all-in-one
 
 # Go parameters
 GOCMD=go
@@ -31,11 +41,36 @@ help:
 	@echo "Available targets:"
 	@grep -E '^## ' $(MAKEFILE_LIST) | sed 's/## /  /' | column -t -s ':'
 
-## build: Build the binary
-build:
-	@echo "Building $(BINARY_NAME)..."
-	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) $(CMD_DIR)
-	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
+## build: Build all binaries
+build: build-all
+
+## build-all: Build all binaries (canopy, initiator, worker, all-in-one)
+build-all: build-canopy build-initiator build-worker build-all-in-one
+	@echo "All binaries built successfully"
+
+## build-canopy: Build the canopy binary (local mode)
+build-canopy:
+	@echo "Building $(CANOPY_BINARY)..."
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(CANOPY_BINARY) $(CANOPY_CMD)
+	@echo "Build complete: $(BUILD_DIR)/$(CANOPY_BINARY)"
+
+## build-initiator: Build the initiator binary
+build-initiator:
+	@echo "Building $(INITIATOR_BINARY)..."
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(INITIATOR_BINARY) $(INITIATOR_CMD)
+	@echo "Build complete: $(BUILD_DIR)/$(INITIATOR_BINARY)"
+
+## build-worker: Build the worker binary
+build-worker:
+	@echo "Building $(WORKER_BINARY)..."
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(WORKER_BINARY) $(WORKER_CMD)
+	@echo "Build complete: $(BUILD_DIR)/$(WORKER_BINARY)"
+
+## build-all-in-one: Build the all-in-one binary
+build-all-in-one:
+	@echo "Building $(ALL_IN_ONE_BINARY)..."
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(ALL_IN_ONE_BINARY) $(ALL_IN_ONE_CMD)
+	@echo "Build complete: $(BUILD_DIR)/$(ALL_IN_ONE_BINARY)"
 
 ## test: Run all tests (excluding integration tests)
 test:
@@ -139,18 +174,39 @@ local-logs:
 ## clean: Remove build artifacts and test outputs
 clean:
 	@echo "Cleaning build artifacts..."
-	rm -f $(BUILD_DIR)/$(BINARY_NAME)
-	rm -f $(COVERAGE_FILE)
-	rm -f $(COVERAGE_HTML)
+	rm -f $(BUILD_DIR)/$(CANOPY_BINARY)
+	rm -f $(BUILD_DIR)/$(INITIATOR_BINARY)
+	rm -f $(BUILD_DIR)/$(WORKER_BINARY)
+	rm -f $(BUILD_DIR)/$(ALL_IN_ONE_BINARY)
+	rm -rf $(COVERAGE_FILE)
+	rm -rf $(COVERAGE_HTML)
 	@echo "Clean complete"
 
-## run: Build and run the application locally
-run: build
-	@echo "Running $(BINARY_NAME)..."
-	./$(BINARY_NAME)
+## run-canopy: Build and run canopy (local mode)
+run-canopy: build-canopy
+	@echo "Running $(CANOPY_BINARY)..."
+	./$(CANOPY_BINARY)
 
-## install: Install the binary to GOPATH/bin
+## run-initiator: Build and run initiator
+run-initiator: build-initiator
+	@echo "Running $(INITIATOR_BINARY)..."
+	./$(INITIATOR_BINARY)
+
+## run-worker: Build and run worker
+run-worker: build-worker
+	@echo "Running $(WORKER_BINARY)..."
+	./$(WORKER_BINARY)
+
+## run-all-in-one: Build and run all-in-one
+run-all-in-one: build-all-in-one
+	@echo "Running $(ALL_IN_ONE_BINARY)..."
+	./$(ALL_IN_ONE_BINARY)
+
+## install: Install all binaries to GOPATH/bin
 install:
-	@echo "Installing $(BINARY_NAME)..."
-	$(GOCMD) install $(CMD_DIR)
-	@echo "Installed to $(shell go env GOPATH)/bin/$(BINARY_NAME)"
+	@echo "Installing binaries..."
+	$(GOCMD) install $(CANOPY_CMD)
+	$(GOCMD) install $(INITIATOR_CMD)
+	$(GOCMD) install $(WORKER_CMD)
+	$(GOCMD) install $(ALL_IN_ONE_CMD)
+	@echo "Installed to $(shell go env GOPATH)/bin/"

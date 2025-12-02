@@ -1,2 +1,5 @@
-/canopy
+# Executable files
+/canopy*
+
+# Coverage artifacts
 .coverage
