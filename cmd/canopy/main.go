@@ -19,6 +19,7 @@ var (
 	// CLI flags
 	coveragePath string
 	format       string
+	baseRef      string
 	commitSHA    string
 )
 
@@ -60,6 +61,7 @@ func init() {
 	// Define flags
 	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files")
 	rootCmd.Flags().StringVar(&format, "format", "Text", "Output format (Text, Markdown, GitHubAnnotations)")
+	rootCmd.Flags().StringVar(&baseRef, "base", "", "Analyze diff against base ref (uses git diff <base>...HEAD)")
 	rootCmd.Flags().StringVar(&commitSHA, "commit", "", "Analyze diff for a specific commit (uses git diff-tree)")
 }
 
@@ -67,8 +69,11 @@ func run(cmd *cobra.Command, args []string) error {
 	// Create appropriate DiffSource based on flags (hierarchy-based selection)
 	var diffSource diff.DiffSource
 
-	if commitSHA != "" {
-		// Explicit --commit flag takes priority
+	if baseRef != "" {
+		// --base flag takes highest priority (for PR context)
+		diffSource = diff.NewGitBaseDiffSource(baseRef, "")
+	} else if commitSHA != "" {
+		// --commit flag for single commit analysis
 		diffSource = diff.NewGitCommitDiffSource(commitSHA, "")
 	} else {
 		// Default: use local git diff

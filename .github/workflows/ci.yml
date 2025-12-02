@@ -21,7 +21,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Fetch full history for commit analysis
+          fetch-depth: 0  # Fetch full history for proper diff computation
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -40,7 +40,7 @@ jobs:
       - name: Test canopy with GitHubAnnotations format
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            go run ./cmd/canopy --commit ${{ github.event.pull_request.head.sha }} --format GitHubAnnotations
+            go run ./cmd/canopy --base ${{ github.event.pull_request.base.sha }} --format GitHubAnnotations
           else
             go run ./cmd/canopy --commit ${{ github.sha }} --format GitHubAnnotations
           fi
