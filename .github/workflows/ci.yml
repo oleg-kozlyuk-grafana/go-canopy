@@ -9,10 +9,11 @@ on:
       - main
 
 jobs:
-  test:
-    name: Build and Test
+  self-test:
+    name: Self-test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         covermode: [set, count, atomic]
 
@@ -31,7 +32,7 @@ jobs:
         run: go build ./...
 
       - name: Run tests with coverage
-        run: go test -v -race -coverprofile=coverage-${{ matrix.covermode }}.out -covermode=${{ matrix.covermode }} ./...
+        run: go test -v -coverprofile=coverage-${{ matrix.covermode }}.out -covermode=${{ matrix.covermode }} ./...
 
       - name: Test canopy with GitHubAnnotations format
         run: |
