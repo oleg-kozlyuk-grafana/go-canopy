@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/oleg-kozlyuk/canopy/internal/coverage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
 )
 
 // GitHubAnnotationsFormatter formats analysis results as GitHub Actions workflow commands.

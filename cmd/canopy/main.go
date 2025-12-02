@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/oleg-kozlyuk/canopy/internal/local"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/local"
 	"github.com/spf13/cobra"
 )
 

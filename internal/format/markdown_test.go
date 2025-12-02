@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/oleg-kozlyuk/canopy/internal/coverage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

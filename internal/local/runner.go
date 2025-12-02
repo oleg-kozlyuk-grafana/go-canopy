@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/oleg-kozlyuk/canopy/internal/coverage"
-	"github.com/oleg-kozlyuk/canopy/internal/format"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/format"
 )
 
 // Config holds configuration for local mode.

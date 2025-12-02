@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
 
-	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
+	storagepkg "github.com/oleg-kozlyuk-grafana/go-canopy/internal/storage"
 )
 
 // GCSStorage implements the Storage interface using Google Cloud Storage.

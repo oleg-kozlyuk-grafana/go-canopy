@@ -12,8 +12,8 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
-	"github.com/oleg-kozlyuk/canopy/internal/testutil"
+	storagepkg "github.com/oleg-kozlyuk-grafana/go-canopy/internal/storage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/testutil"
 )
 
 // TestMinIOStorage_Integration runs integration tests against a real MinIO instance.

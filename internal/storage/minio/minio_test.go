@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
+	storagepkg "github.com/oleg-kozlyuk-grafana/go-canopy/internal/storage"
 )
 
 func TestNewMinIOStorage(t *testing.T) {

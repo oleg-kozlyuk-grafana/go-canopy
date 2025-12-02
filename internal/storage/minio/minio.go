@@ -10,7 +10,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 
-	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
+	storagepkg "github.com/oleg-kozlyuk-grafana/go-canopy/internal/storage"
 )
 
 // MinIOStorage implements the Storage interface using MinIO (S3-compatible storage).

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/oleg-kozlyuk/canopy/internal/coverage"
+	"github.com/oleg-kozlyuk-grafana/go-canopy/internal/coverage"
 )
 
 // TextFormatter formats analysis results as plain text for console output.

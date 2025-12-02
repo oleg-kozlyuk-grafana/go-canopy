@@ -1,4 +1,4 @@
-module github.com/oleg-kozlyuk/canopy
+module github.com/oleg-kozlyuk-grafana/go-canopy
 
 go 1.25.4
 

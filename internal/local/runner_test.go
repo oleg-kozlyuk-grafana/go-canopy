@@ -162,8 +162,8 @@ func TestRunner_Run_Integration(t *testing.T) {
 
 	// Write coverage files
 	coverageContent := `mode: set
-github.com/oleg-kozlyuk/canopy/internal/local/runner.go:10.1,12.2 1 1
-github.com/oleg-kozlyuk/canopy/internal/local/runner.go:14.1,16.2 1 0
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/local/runner.go:10.1,12.2 1 1
+github.com/oleg-kozlyuk-grafana/go-canopy/internal/local/runner.go:14.1,16.2 1 0
 `
 	coveragePath := filepath.Join(coverageDir, "coverage.out")
 	err = os.WriteFile(coveragePath, []byte(coverageContent), 0644)
