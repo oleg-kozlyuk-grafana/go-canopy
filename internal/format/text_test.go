@@ -23,8 +23,8 @@ func TestTextFormatter_Format(t *testing.T) {
 				UncoveredByFile: map[string][]int{
 					"main.go": {5, 10, 15},
 				},
-				TotalAdded:     20,
-				TotalUncovered: 3,
+				DiffAddedLines:   20,
+				DiffAddedCovered: 17, // 20 - 3 uncovered = 17 covered
 			},
 			expectedOutput: `Uncovered lines in diff:
 
@@ -41,8 +41,8 @@ Summary: 3 uncovered lines out of 20 added lines (85.0% coverage)
 					"handler.go": {10, 15, 20},
 					"main.go":    {5, 7},
 				},
-				TotalAdded:     25,
-				TotalUncovered: 5,
+				DiffAddedLines:   25,
+				DiffAddedCovered: 20, // 25 - 5 uncovered = 20 covered
 			},
 			expectedOutput: `Uncovered lines in diff:
 
@@ -58,18 +58,18 @@ Summary: 5 uncovered lines out of 25 added lines (80.0% coverage)
 		{
 			name: "all lines covered",
 			result: &coverage.AnalysisResult{
-				UncoveredByFile: map[string][]int{},
-				TotalAdded:      10,
-				TotalUncovered:  0,
+				UncoveredByFile:  map[string][]int{},
+				DiffAddedLines:   10,
+				DiffAddedCovered: 10, // all 10 covered
 			},
 			expectedOutput: "All added lines are covered!\n",
 		},
 		{
 			name: "no lines added",
 			result: &coverage.AnalysisResult{
-				UncoveredByFile: map[string][]int{},
-				TotalAdded:      0,
-				TotalUncovered:  0,
+				UncoveredByFile:  map[string][]int{},
+				DiffAddedLines:   0,
+				DiffAddedCovered: 0,
 			},
 			expectedOutput: "No lines added in diff\n",
 		},
@@ -79,8 +79,8 @@ Summary: 5 uncovered lines out of 25 added lines (80.0% coverage)
 				UncoveredByFile: map[string][]int{
 					"server.go": {5, 6, 7, 10, 11, 15, 20, 21, 22, 23},
 				},
-				TotalAdded:     15,
-				TotalUncovered: 10,
+				DiffAddedLines:   15,
+				DiffAddedCovered: 5, // 15 - 10 uncovered = 5 covered
 			},
 			expectedOutput: `Uncovered lines in diff:
 
@@ -236,8 +236,8 @@ func TestTextFormatter_AlphabeticalOrder(t *testing.T) {
 			"alpha.go":   {2},
 			"charlie.go": {3},
 		},
-		TotalAdded:     3,
-		TotalUncovered: 3,
+		DiffAddedLines:   3,
+		DiffAddedCovered: 0, // all 3 uncovered
 	}
 
 	formatter := &TextFormatter{}

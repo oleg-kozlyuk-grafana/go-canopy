@@ -12,10 +12,14 @@ import (
 type AnalysisResult struct {
 	// UncoveredByFile maps filenames to their uncovered line numbers
 	UncoveredByFile map[string][]int
-	// TotalAdded is the total number of lines added in the diff
-	TotalAdded int
-	// TotalUncovered is the total number of uncovered added lines
-	TotalUncovered int
+	// TotalLines is the total number of instrumented lines across all profiles
+	TotalLines int
+	// TotalCovered is the total number of covered lines across all profiles
+	TotalCovered int
+	// DiffAddedLines is the total number of lines added in the diff
+	DiffAddedLines int
+	// DiffAddedCovered is the total number of covered lines among added lines
+	DiffAddedCovered int
 }
 
 // findMatchingDiffFile finds the diff file that matches a coverage profile.
@@ -50,11 +54,25 @@ func findMatchingDiffFile(profile *Profile, addedLinesByFile map[string][]int) (
 func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *AnalysisResult {
 	result := &AnalysisResult{
 		UncoveredByFile: make(map[string][]int),
-		TotalAdded:      0,
-		TotalUncovered:  0,
+		TotalLines:      0,
+		TotalCovered:    0,
+		DiffAddedLines:  0,
+		DiffAddedCovered: 0,
 	}
 
-	// Process files that have coverage data
+	// First pass: Calculate true total/covered lines from all profiles
+	for _, profile := range profiles {
+		for _, block := range profile.Blocks {
+			// Count lines in this block (EndLine - StartLine + 1)
+			linesInBlock := block.EndLine - block.StartLine + 1
+			result.TotalLines += linesInBlock
+			if block.Count > 0 {
+				result.TotalCovered += linesInBlock
+			}
+		}
+	}
+
+	// Second pass: Process files that have coverage data and are in the diff
 	// Files without coverage records are excluded from the output
 	for _, profile := range profiles {
 		// Find the matching diff file
@@ -65,7 +83,7 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 		}
 
 		// Count total added lines for this file
-		result.TotalAdded += len(addedLines)
+		result.DiffAddedLines += len(addedLines)
 
 		// Check each added line to see if it's covered
 		var uncoveredLines []int
@@ -74,9 +92,10 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 			if !isLineInstrumented(profile, line) {
 				continue // Skip non-executable lines (comments, blank lines, etc.)
 			}
-			if !isLineCovered(profile, line) {
+			if isLineCovered(profile, line) {
+				result.DiffAddedCovered++
+			} else {
 				uncoveredLines = append(uncoveredLines, line)
-				result.TotalUncovered++
 			}
 		}
 
@@ -129,7 +148,7 @@ func isLineCovered(profile *Profile, line int) bool {
 
 // HasUncoveredLines returns true if there are any uncovered lines in the result.
 func (r *AnalysisResult) HasUncoveredLines() bool {
-	return r.TotalUncovered > 0
+	return r.DiffAddedLines > r.DiffAddedCovered
 }
 
 // GetSortedFiles returns a sorted list of files with uncovered lines.

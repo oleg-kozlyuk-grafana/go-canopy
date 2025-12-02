@@ -22,8 +22,8 @@ func TestGitHubAnnotationsFormatter_Format(t *testing.T) {
 				UncoveredByFile: map[string][]int{
 					"main.go": {5, 10, 15},
 				},
-				TotalAdded:     20,
-				TotalUncovered: 3,
+				DiffAddedLines:   20,
+				DiffAddedCovered: 17, // 20 - 3 uncovered = 17 covered
 			},
 			expectedOutput: `::notice file=main.go,line=5,title=Uncovered line::Line 5 is not covered by tests
 ::notice file=main.go,line=10,title=Uncovered line::Line 10 is not covered by tests
@@ -37,8 +37,8 @@ func TestGitHubAnnotationsFormatter_Format(t *testing.T) {
 					"handler.go": {10, 15, 20},
 					"main.go":    {5, 7},
 				},
-				TotalAdded:     25,
-				TotalUncovered: 5,
+				DiffAddedLines:   25,
+				DiffAddedCovered: 20, // 25 - 5 uncovered = 20 covered
 			},
 			expectedOutput: `::notice file=handler.go,line=10,title=Uncovered line::Line 10 is not covered by tests
 ::notice file=handler.go,line=15,title=Uncovered line::Line 15 is not covered by tests
@@ -50,20 +50,20 @@ func TestGitHubAnnotationsFormatter_Format(t *testing.T) {
 		{
 			name: "all lines covered",
 			result: &coverage.AnalysisResult{
-				UncoveredByFile: map[string][]int{},
-				TotalAdded:      10,
-				TotalUncovered:  0,
+				UncoveredByFile:  map[string][]int{},
+				DiffAddedLines:   10,
+				DiffAddedCovered: 10, // all 10 covered
 			},
-			expectedOutput: "All added lines are covered!\n",
+			expectedOutput: "::notice All added lines are covered\n",
 		},
 		{
 			name: "no lines added",
 			result: &coverage.AnalysisResult{
-				UncoveredByFile: map[string][]int{},
-				TotalAdded:      0,
-				TotalUncovered:  0,
+				UncoveredByFile:  map[string][]int{},
+				DiffAddedLines:   0,
+				DiffAddedCovered: 0,
 			},
-			expectedOutput: "No lines added in diff\n",
+			expectedOutput: "::notice No lines added in diff\n",
 		},
 		{
 			name: "consecutive lines grouped into ranges",
@@ -71,8 +71,8 @@ func TestGitHubAnnotationsFormatter_Format(t *testing.T) {
 				UncoveredByFile: map[string][]int{
 					"server.go": {5, 6, 7, 10, 11, 15, 20, 21, 22, 23},
 				},
-				TotalAdded:     15,
-				TotalUncovered: 10,
+				DiffAddedLines:   15,
+				DiffAddedCovered: 5, // 15 - 10 uncovered = 5 covered
 			},
 			expectedOutput: `::notice file=server.go,line=5,endLine=7,title=Uncovered lines::Lines 5-7 are not covered by tests
 ::notice file=server.go,line=10,endLine=11,title=Uncovered lines::Lines 10-11 are not covered by tests
@@ -86,8 +86,8 @@ func TestGitHubAnnotationsFormatter_Format(t *testing.T) {
 				UncoveredByFile: map[string][]int{
 					"test.go": {1, 2, 3, 4, 5},
 				},
-				TotalAdded:     10,
-				TotalUncovered: 5,
+				DiffAddedLines:   10,
+				DiffAddedCovered: 5, // 10 - 5 uncovered = 5 covered
 			},
 			expectedOutput: `::notice file=test.go,line=1,endLine=5,title=Uncovered lines::Lines 1-5 are not covered by tests
 `,

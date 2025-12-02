@@ -19,7 +19,7 @@ func (f *MarkdownFormatter) Format(result *coverage.AnalysisResult, w io.Writer)
 
 	// Handle case where all lines are covered
 	if !result.HasUncoveredLines() {
-		if result.TotalAdded == 0 {
+		if result.DiffAddedLines == 0 {
 			fmt.Fprintln(w, "No lines added in diff")
 			return nil
 		}
@@ -46,12 +46,13 @@ func (f *MarkdownFormatter) Format(result *coverage.AnalysisResult, w io.Writer)
 
 	// Print summary with percentage
 	coveragePercent := 0.0
-	if result.TotalAdded > 0 {
-		coveragePercent = float64(result.TotalAdded-result.TotalUncovered) / float64(result.TotalAdded) * 100
+	if result.DiffAddedLines > 0 {
+		coveragePercent = float64(result.DiffAddedCovered) / float64(result.DiffAddedLines) * 100
 	}
 
+	uncoveredCount := result.DiffAddedLines - result.DiffAddedCovered
 	fmt.Fprintf(w, "**Summary:** %d uncovered lines out of %d added (%.1f%% coverage)\n",
-		result.TotalUncovered, result.TotalAdded, coveragePercent)
+		uncoveredCount, result.DiffAddedLines, coveragePercent)
 
 	return nil
 }

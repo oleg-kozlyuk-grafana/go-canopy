@@ -14,8 +14,10 @@ func TestAnalyzeCoverage(t *testing.T) {
 		profiles                []*Profile
 		addedLinesByFile        map[string][]int
 		expectedUncoveredByFile map[string][]int
-		expectedAdded           int
-		expectedTotalUncovered  int
+		expectedTotalLines      int
+		expectedTotalCovered    int
+		expectedDiffAddedLines  int
+		expectedDiffAddedCovered int
 	}{
 		{
 			name: "all lines covered",
@@ -32,9 +34,11 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {3, 7},
 			},
-			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:           2,
-			expectedTotalUncovered:  0,
+			expectedUncoveredByFile:  map[string][]int{},
+			expectedTotalLines:       10, // 5 + 5 lines
+			expectedTotalCovered:     10, // all covered
+			expectedDiffAddedLines:   2,  // 2 lines added in diff
+			expectedDiffAddedCovered: 2,  // both covered
 		},
 		{
 			name: "some lines uncovered",
@@ -54,8 +58,10 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"main.go": {7, 9},
 			},
-			expectedAdded:          3,
-			expectedTotalUncovered: 2,
+			expectedTotalLines:       10, // 5 + 5 lines
+			expectedTotalCovered:     5,  // only first block
+			expectedDiffAddedLines:   3,  // 3 lines added
+			expectedDiffAddedCovered: 1,  // only line 3 is covered
 		},
 		{
 			name: "no coverage for file",
@@ -71,9 +77,11 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:           0,
-			expectedTotalUncovered:  0,
+			expectedUncoveredByFile:  map[string][]int{},
+			expectedTotalLines:       10, // other.go has 10 lines
+			expectedTotalCovered:     10, // all covered
+			expectedDiffAddedLines:   0,  // no matching file in diff
+			expectedDiffAddedCovered: 0,
 		},
 		{
 			name: "multiple files mixed coverage",
@@ -101,16 +109,20 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"server.go": {35}, // only server.go line 35 is uncovered
 			},
-			expectedAdded:          4,
-			expectedTotalUncovered: 1, // only 1 uncovered (line 20 is ignored as non-instrumented)
+			expectedTotalLines:       33, // server: 11+11=22, handler: 11 = 33
+			expectedTotalCovered:     22, // server: 11, handler: 11 = 22
+			expectedDiffAddedLines:   4,  // 2 in server.go + 2 in handler.go
+			expectedDiffAddedCovered: 2,  // line 15 (server) and line 10 (handler) are covered; line 20 ignored as non-instrumented
 		},
 		{
-			name:                    "empty diff",
-			profiles:                []*Profile{},
-			addedLinesByFile:        map[string][]int{},
-			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:           0,
-			expectedTotalUncovered:  0,
+			name:                     "empty diff",
+			profiles:                 []*Profile{},
+			addedLinesByFile:         map[string][]int{},
+			expectedUncoveredByFile:  map[string][]int{},
+			expectedTotalLines:       0,
+			expectedTotalCovered:     0,
+			expectedDiffAddedLines:   0,
+			expectedDiffAddedCovered: 0,
 		},
 		{
 			name: "file with coverage not in diff",
@@ -127,9 +139,11 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:           0,
-			expectedTotalUncovered:  0,
+			expectedUncoveredByFile:  map[string][]int{},
+			expectedTotalLines:       10, // 5 + 5 lines
+			expectedTotalCovered:     5,  // only second block
+			expectedDiffAddedLines:   0,  // no matching file
+			expectedDiffAddedCovered: 0,
 		},
 		{
 			name:     "no coverage data",
@@ -137,9 +151,11 @@ func TestAnalyzeCoverage(t *testing.T) {
 			addedLinesByFile: map[string][]int{
 				"main.go": {1, 2, 3},
 			},
-			expectedUncoveredByFile: map[string][]int{},
-			expectedAdded:           0,
-			expectedTotalUncovered:  0,
+			expectedUncoveredByFile:  map[string][]int{},
+			expectedTotalLines:       0,
+			expectedTotalCovered:     0,
+			expectedDiffAddedLines:   0,
+			expectedDiffAddedCovered: 0,
 		},
 		{
 			name: "nested file paths",
@@ -159,8 +175,10 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"internal/server/handler.go": {15},
 			},
-			expectedAdded:          2,
-			expectedTotalUncovered: 1,
+			expectedTotalLines:       20, // 10 + 10 lines
+			expectedTotalCovered:     10, // first block
+			expectedDiffAddedLines:   2,  // 2 lines added
+			expectedDiffAddedCovered: 1,  // line 5 covered, line 15 not
 		},
 		{
 			name: "non-instrumented lines are ignored",
@@ -180,8 +198,10 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedUncoveredByFile: map[string][]int{
 				"main.go": {11}, // only line 11 is uncovered (in block with Count=0)
 			},
-			expectedAdded:          6,
-			expectedTotalUncovered: 1, // only 1 uncovered line (11), others are ignored
+			expectedTotalLines:       6, // 3 + 3 lines
+			expectedTotalCovered:     3, // first block only
+			expectedDiffAddedLines:   6, // 6 lines added (including non-instrumented)
+			expectedDiffAddedCovered: 1, // only line 6 is covered and instrumented
 		},
 	}
 
@@ -190,8 +210,10 @@ func TestAnalyzeCoverage(t *testing.T) {
 			result := AnalyzeCoverage(tt.profiles, tt.addedLinesByFile)
 
 			assert.Equal(t, tt.expectedUncoveredByFile, result.UncoveredByFile)
-			assert.Equal(t, tt.expectedAdded, result.TotalAdded)
-			assert.Equal(t, tt.expectedTotalUncovered, result.TotalUncovered)
+			assert.Equal(t, tt.expectedTotalLines, result.TotalLines)
+			assert.Equal(t, tt.expectedTotalCovered, result.TotalCovered)
+			assert.Equal(t, tt.expectedDiffAddedLines, result.DiffAddedLines)
+			assert.Equal(t, tt.expectedDiffAddedCovered, result.DiffAddedCovered)
 		})
 	}
 }
@@ -361,14 +383,24 @@ func TestAnalysisResult_HasUncoveredLines(t *testing.T) {
 		{
 			name: "has uncovered lines",
 			result: &AnalysisResult{
-				TotalUncovered: 5,
+				DiffAddedLines:   5,
+				DiffAddedCovered: 3, // 2 uncovered
 			},
 			expected: true,
 		},
 		{
 			name: "no uncovered lines",
 			result: &AnalysisResult{
-				TotalUncovered: 0,
+				DiffAddedLines:   5,
+				DiffAddedCovered: 5, // all covered
+			},
+			expected: false,
+		},
+		{
+			name: "no lines added",
+			result: &AnalysisResult{
+				DiffAddedLines:   0,
+				DiffAddedCovered: 0,
 			},
 			expected: false,
 		},
@@ -417,8 +449,10 @@ func TestAnalyzeCoverage_EdgeCases(t *testing.T) {
 		// Line 5 should be covered (end of first block)
 		// Line 6 should be uncovered (start of second block with Count=0)
 		assert.Equal(t, map[string][]int{"test.go": {6}}, result.UncoveredByFile)
-		assert.Equal(t, 2, result.TotalAdded)
-		assert.Equal(t, 1, result.TotalUncovered)
+		assert.Equal(t, 10, result.TotalLines)       // 5 + 5 lines
+		assert.Equal(t, 5, result.TotalCovered)      // first block only
+		assert.Equal(t, 2, result.DiffAddedLines)    // 2 lines added
+		assert.Equal(t, 1, result.DiffAddedCovered)  // line 5 covered
 	})
 
 	t.Run("single line block", func(t *testing.T) {
@@ -438,8 +472,10 @@ func TestAnalyzeCoverage_EdgeCases(t *testing.T) {
 		result := AnalyzeCoverage(profiles, addedLines)
 
 		assert.Equal(t, map[string][]int{}, result.UncoveredByFile)
-		assert.Equal(t, 1, result.TotalAdded)
-		assert.Equal(t, 0, result.TotalUncovered)
+		assert.Equal(t, 1, result.TotalLines)       // 1 line
+		assert.Equal(t, 1, result.TotalCovered)     // covered
+		assert.Equal(t, 1, result.DiffAddedLines)   // 1 line added
+		assert.Equal(t, 1, result.DiffAddedCovered) // covered
 	})
 }
 
