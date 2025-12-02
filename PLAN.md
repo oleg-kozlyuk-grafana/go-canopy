@@ -177,7 +177,7 @@ canopy/
 
 ### Phase 3: Storage Abstraction
 
-- [ ] **3.1** Define Storage interface (`internal/storage/interface.go`)
+- [x] **3.1** Define Storage interface (`internal/storage/interface.go`)
   - CoverageKey struct (org, repo, branch)
   - SaveCoverage() method
   - GetCoverage() method (returns nil if not found)
