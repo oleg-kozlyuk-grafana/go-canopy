@@ -35,9 +35,6 @@ const (
 
 // Config holds all configuration for the Canopy service
 type Config struct {
-	// Mode determines which components to run
-	Mode Mode
-
 	// Port for the HTTP server
 	Port int
 
@@ -106,19 +103,14 @@ type InitiatorConfig struct {
 	AllowedWorkflows  []string
 }
 
-// Load loads configuration from environment variables
-func Load() (*Config, error) {
-	cfg := &Config{}
-
-	// Mode (required)
-	modeStr := getEnv("CANOPY_MODE", "")
-	if modeStr == "" {
-		return nil, fmt.Errorf("CANOPY_MODE is required")
-	}
-	cfg.Mode = Mode(modeStr)
-	if err := cfg.validateMode(); err != nil {
+// Load loads configuration from environment variables for the specified mode
+func Load(mode Mode) (*Config, error) {
+	// Validate mode
+	if err := validateMode(mode); err != nil {
 		return nil, err
 	}
+
+	cfg := &Config{}
 
 	// Port (optional, default 8080)
 	port, err := strconv.Atoi(getEnv("CANOPY_PORT", "8080"))
@@ -131,23 +123,23 @@ func Load() (*Config, error) {
 	cfg.DisableHMAC = getEnv("CANOPY_DISABLE_HMAC", "false") == "true"
 
 	// Load mode-specific config
-	switch cfg.Mode {
+	switch mode {
 	case ModeAllInOne:
-		if err := cfg.loadAllInOneConfig(); err != nil {
+		if err := cfg.loadAllInOneConfig(mode); err != nil {
 			return nil, err
 		}
 	case ModeInitiator:
-		if err := cfg.loadInitiatorConfig(); err != nil {
+		if err := cfg.loadInitiatorConfig(mode); err != nil {
 			return nil, err
 		}
 	case ModeWorker:
-		if err := cfg.loadWorkerConfig(); err != nil {
+		if err := cfg.loadWorkerConfig(mode); err != nil {
 			return nil, err
 		}
 	}
 
 	// Validate the complete configuration
-	if err := cfg.Validate(); err != nil {
+	if err := cfg.Validate(mode); err != nil {
 		return nil, err
 	}
 
@@ -155,7 +147,7 @@ func Load() (*Config, error) {
 }
 
 // loadAllInOneConfig loads config for all-in-one mode
-func (c *Config) loadAllInOneConfig() error {
+func (c *Config) loadAllInOneConfig(mode Mode) error {
 	// Queue: in-memory by default, but can use Redis/Pub/Sub
 	queueType := getEnv("CANOPY_QUEUE_TYPE", string(QueueTypeInMemory))
 	c.Queue.Type = QueueType(queueType)
@@ -168,7 +160,7 @@ func (c *Config) loadAllInOneConfig() error {
 			return err
 		}
 	case QueueTypePubSub:
-		if err := c.loadPubSubConfig(); err != nil {
+		if err := c.loadPubSubConfig(mode); err != nil {
 			return err
 		}
 	default:
@@ -194,7 +186,7 @@ func (c *Config) loadAllInOneConfig() error {
 }
 
 // loadInitiatorConfig loads config for initiator mode
-func (c *Config) loadInitiatorConfig() error {
+func (c *Config) loadInitiatorConfig(mode Mode) error {
 	// Queue (required)
 	queueType := getEnv("CANOPY_QUEUE_TYPE", "")
 	if queueType == "" {
@@ -208,7 +200,7 @@ func (c *Config) loadInitiatorConfig() error {
 			return err
 		}
 	case QueueTypePubSub:
-		if err := c.loadPubSubConfig(); err != nil {
+		if err := c.loadPubSubConfig(mode); err != nil {
 			return err
 		}
 	default:
@@ -224,7 +216,7 @@ func (c *Config) loadInitiatorConfig() error {
 }
 
 // loadWorkerConfig loads config for worker mode
-func (c *Config) loadWorkerConfig() error {
+func (c *Config) loadWorkerConfig(mode Mode) error {
 	// Queue (required)
 	queueType := getEnv("CANOPY_QUEUE_TYPE", "")
 	if queueType == "" {
@@ -238,7 +230,7 @@ func (c *Config) loadWorkerConfig() error {
 			return err
 		}
 	case QueueTypePubSub:
-		if err := c.loadPubSubConfig(); err != nil {
+		if err := c.loadPubSubConfig(mode); err != nil {
 			return err
 		}
 	default:
@@ -274,7 +266,7 @@ func (c *Config) loadRedisConfig() error {
 }
 
 // loadPubSubConfig loads Pub/Sub queue configuration
-func (c *Config) loadPubSubConfig() error {
+func (c *Config) loadPubSubConfig(mode Mode) error {
 	c.Queue.PubSubProjectID = getEnv("CANOPY_PUBSUB_PROJECT_ID", "")
 	if c.Queue.PubSubProjectID == "" {
 		return fmt.Errorf("CANOPY_PUBSUB_PROJECT_ID is required for pubsub queue")
@@ -283,7 +275,7 @@ func (c *Config) loadPubSubConfig() error {
 	c.Queue.PubSubTopicID = getEnv("CANOPY_PUBSUB_TOPIC_ID", "canopy-coverage-requests")
 
 	// Subscription is only needed for worker/all-in-one
-	if c.Mode == ModeWorker || c.Mode == ModeAllInOne {
+	if mode == ModeWorker || mode == ModeAllInOne {
 		c.Queue.PubSubSubscription = getEnv("CANOPY_PUBSUB_SUBSCRIPTION", "")
 		if c.Queue.PubSubSubscription == "" {
 			return fmt.Errorf("CANOPY_PUBSUB_SUBSCRIPTION is required for worker/all-in-one mode")
@@ -390,24 +382,24 @@ func (c *Config) loadInitiatorSettings() error {
 }
 
 // validateMode validates that the mode is valid
-func (c *Config) validateMode() error {
-	switch c.Mode {
+func validateMode(mode Mode) error {
+	switch mode {
 	case ModeAllInOne, ModeInitiator, ModeWorker:
 		return nil
 	default:
-		return fmt.Errorf("invalid mode: %s (must be all-in-one, initiator, or worker)", c.Mode)
+		return fmt.Errorf("invalid mode: %s (must be all-in-one, initiator, or worker)", mode)
 	}
 }
 
-// Validate validates the complete configuration
-func (c *Config) Validate() error {
+// Validate validates the complete configuration for the specified mode
+func (c *Config) Validate(mode Mode) error {
 	// Port validation
 	if c.Port < 1 || c.Port > 65535 {
 		return fmt.Errorf("invalid port: %d (must be between 1 and 65535)", c.Port)
 	}
 
 	// Mode-specific validation
-	switch c.Mode {
+	switch mode {
 	case ModeAllInOne:
 		// All-in-one needs everything
 		if c.Queue.Type == "" {

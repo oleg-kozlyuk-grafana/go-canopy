@@ -15,7 +15,6 @@ var (
 	date    = "unknown"
 
 	// CLI flags
-	mode        string
 	port        int
 	disableHMAC bool
 )
@@ -28,11 +27,14 @@ func main() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "canopy",
+	Use:   "canopy MODE",
 	Short: "Canopy - Code coverage annotations for GitHub PRs",
 	Long: `Canopy is a Go service that provides code coverage annotations on GitHub pull requests.
 It receives GitHub workflow_run webhooks, processes Go coverage files, and posts check runs
-with annotations highlighting uncovered lines.`,
+with annotations highlighting uncovered lines.
+
+MODE must be one of: all-in-one, initiator, or worker`,
+	Args: cobra.ExactArgs(1),
 	RunE: run,
 }
 
@@ -51,19 +53,15 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	// Define flags
-	rootCmd.Flags().StringVar(&mode, "mode", "", "Deployment mode: all-in-one, initiator, or worker (required)")
 	rootCmd.Flags().IntVar(&port, "port", 8080, "HTTP server port")
 	rootCmd.Flags().BoolVar(&disableHMAC, "disable-hmac", false, "Disable HMAC signature validation (for local development only)")
-
-	// Mark required flags
-	rootCmd.MarkFlagRequired("mode")
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	// Override environment variables with CLI flags
-	if mode != "" {
-		os.Setenv("CANOPY_MODE", mode)
-	}
+	// Get mode from positional argument
+	mode := config.Mode(args[0])
+
+	// Override environment variables with CLI flags if they were explicitly set
 	if cmd.Flags().Changed("port") {
 		os.Setenv("CANOPY_PORT", fmt.Sprintf("%d", port))
 	}
@@ -72,19 +70,19 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load configuration
-	cfg, err := config.Load()
+	cfg, err := config.Load(mode)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Print startup information
-	fmt.Printf("Starting Canopy in %s mode on port %d\n", cfg.Mode, cfg.Port)
+	fmt.Printf("Starting Canopy in %s mode on port %d\n", mode, cfg.Port)
 	if cfg.DisableHMAC {
 		fmt.Println("WARNING: HMAC validation is disabled. This should only be used for local development.")
 	}
 
 	// TODO: Start the appropriate service based on mode
-	switch cfg.Mode {
+	switch mode {
 	case config.ModeAllInOne:
 		return runAllInOne(cfg)
 	case config.ModeInitiator:
@@ -92,7 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 	case config.ModeWorker:
 		return runWorker(cfg)
 	default:
-		return fmt.Errorf("invalid mode: %s", cfg.Mode)
+		return fmt.Errorf("invalid mode: %s", mode)
 	}
 }
 

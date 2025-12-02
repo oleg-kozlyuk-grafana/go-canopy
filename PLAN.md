@@ -131,32 +131,32 @@ canopy/
   - Health check endpoint
   - Metrics endpoint (optional)
 
-- [ ] **1.5** Write configuration tests
+- [x] **1.5** Write configuration tests
   - Test env var loading
   - Test flag precedence
   - Test validation errors
 
 ### Phase 2: Message Queue Abstraction
 
-- [ ] **2.1** Define MessageQueue interface (`internal/queue/interface.go`)
+- [x] **2.1** Define MessageQueue interface (`internal/queue/interface.go`)
   - WorkRequest message struct (org, repo, workflow_run_id)
   - Publish() method
   - Subscribe() method with handler function
   - Close() method
 
-- [ ] **2.2** Implement GCP Pub/Sub adapter (`internal/queue/pubsub.go`)
+- [x] **2.2** Implement GCP Pub/Sub adapter (`internal/queue/pubsub.go`)
   - Client initialization
   - Publish with context and error handling
   - Subscribe with message acknowledgment
   - Handle graceful shutdown
 
-- [ ] **2.3** Implement Redis adapter (`internal/queue/redis.go`)
+- [x] **2.3** Implement Redis adapter (`internal/queue/redis.go`)
   - Use Redis Streams for reliability
   - Consumer group support
   - Message acknowledgment
   - Handle connection errors
 
-- [ ] **2.4** Implement in-memory queue (`internal/queue/inmemory.go`)
+- [x] **2.4** Implement in-memory queue (`internal/queue/inmemory.go`)
   - Simple channel-based queue for all-in-one mode
   - Synchronous processing
 

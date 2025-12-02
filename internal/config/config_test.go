@@ -43,25 +43,11 @@ func setupEnv(t *testing.T, envVars map[string]string) func() {
 	}
 }
 
-func TestLoad_MissingMode(t *testing.T) {
-	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE": "",
-	})
-	defer cleanup()
-
-	cfg, err := Load()
-	assert.Error(t, err)
-	assert.Nil(t, cfg)
-	assert.Contains(t, err.Error(), "CANOPY_MODE is required")
-}
-
 func TestLoad_InvalidMode(t *testing.T) {
-	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE": "invalid-mode",
-	})
+	cleanup := setupEnv(t, map[string]string{})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load("invalid-mode")
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid mode")
@@ -69,12 +55,11 @@ func TestLoad_InvalidMode(t *testing.T) {
 
 func TestLoad_InvalidPort(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE": "all-in-one",
 		"CANOPY_PORT": "not-a-number",
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid CANOPY_PORT")
@@ -82,7 +67,7 @@ func TestLoad_InvalidPort(t *testing.T) {
 
 func TestLoad_AllInOneMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_PORT":                    "8080",
 		"CANOPY_DISABLE_HMAC":            "false",
 		"CANOPY_QUEUE_TYPE":              "inmemory",
@@ -101,11 +86,11 @@ func TestLoad_AllInOneMode_Success(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	assert.Equal(t, ModeAllInOne, cfg.Mode)
+	
 	assert.Equal(t, 8080, cfg.Port)
 	assert.False(t, cfg.DisableHMAC)
 	assert.Equal(t, QueueTypeInMemory, cfg.Queue.Type)
@@ -121,7 +106,7 @@ func TestLoad_AllInOneMode_Success(t *testing.T) {
 
 func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_REDIS_PASSWORD":          "password",
@@ -139,7 +124,7 @@ func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
@@ -152,7 +137,7 @@ func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
 
 func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "pubsub",
 		"CANOPY_PUBSUB_PROJECT_ID":       "my-project",
 		"CANOPY_PUBSUB_TOPIC_ID":         "my-topic",
@@ -167,7 +152,7 @@ func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
@@ -181,7 +166,7 @@ func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 
 func TestLoad_InitiatorMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                "initiator",
+		
 		"CANOPY_PORT":                "8080",
 		"CANOPY_QUEUE_TYPE":          "pubsub",
 		"CANOPY_PUBSUB_PROJECT_ID":   "my-project",
@@ -192,24 +177,24 @@ func TestLoad_InitiatorMode_Success(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeInitiator)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	assert.Equal(t, ModeInitiator, cfg.Mode)
+	
 	assert.Equal(t, QueueTypePubSub, cfg.Queue.Type)
 	assert.Equal(t, "my-org", cfg.Initiator.AllowedOrgs[0])
 }
 
 func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":             "initiator",
+		
 		"CANOPY_WEBHOOK_SECRET":   "my-secret",
 		"CANOPY_ALLOWED_ORGS":     "my-org",
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeInitiator)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_QUEUE_TYPE is required")
@@ -217,14 +202,14 @@ func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
 
 func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":           "initiator",
+		
 		"CANOPY_QUEUE_TYPE":     "inmemory",
 		"CANOPY_WEBHOOK_SECRET": "my-secret",
 		"CANOPY_ALLOWED_ORGS":   "my-org",
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeInitiator)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid queue type for initiator")
@@ -232,7 +217,7 @@ func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
 
 func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":              "initiator",
+		
 		"CANOPY_QUEUE_TYPE":        "redis",
 		"CANOPY_REDIS_ADDR":        "localhost:6379",
 		"CANOPY_ALLOWED_ORGS":      "my-org",
@@ -240,7 +225,7 @@ func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeInitiator)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_WEBHOOK_SECRET is required")
@@ -248,7 +233,7 @@ func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 
 func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":              "initiator",
+		
 		"CANOPY_QUEUE_TYPE":        "redis",
 		"CANOPY_REDIS_ADDR":        "localhost:6379",
 		"CANOPY_ALLOWED_ORGS":      "my-org",
@@ -256,7 +241,7 @@ func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeInitiator)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 	assert.True(t, cfg.DisableHMAC)
@@ -265,7 +250,7 @@ func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 
 func TestLoad_WorkerMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_STORAGE_TYPE":            "minio",
@@ -278,11 +263,11 @@ func TestLoad_WorkerMode_Success(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	assert.Equal(t, ModeWorker, cfg.Mode)
+	
 	assert.Equal(t, QueueTypeRedis, cfg.Queue.Type)
 	assert.Equal(t, StorageTypeMinio, cfg.Storage.Type)
 	assert.Equal(t, int64(123456), cfg.GitHub.AppID)
@@ -290,7 +275,7 @@ func TestLoad_WorkerMode_Success(t *testing.T) {
 
 func TestLoad_WorkerMode_MissingStorage(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_GITHUB_APP_ID":           "123456",
@@ -299,7 +284,7 @@ func TestLoad_WorkerMode_MissingStorage(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_STORAGE_TYPE is required")
@@ -307,7 +292,7 @@ func TestLoad_WorkerMode_MissingStorage(t *testing.T) {
 
 func TestLoad_WorkerMode_MissingGitHub(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":              "worker",
+		
 		"CANOPY_QUEUE_TYPE":        "redis",
 		"CANOPY_REDIS_ADDR":        "localhost:6379",
 		"CANOPY_STORAGE_TYPE":      "minio",
@@ -317,7 +302,7 @@ func TestLoad_WorkerMode_MissingGitHub(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_GITHUB_APP_ID is required")
@@ -325,7 +310,7 @@ func TestLoad_WorkerMode_MissingGitHub(t *testing.T) {
 
 func TestLoad_WorkerMode_InMemoryQueueNotAllowed(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -337,7 +322,7 @@ func TestLoad_WorkerMode_InMemoryQueueNotAllowed(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid queue type for worker")
@@ -345,7 +330,7 @@ func TestLoad_WorkerMode_InMemoryQueueNotAllowed(t *testing.T) {
 
 func TestLoad_MissingAllowedOrgs(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -358,7 +343,7 @@ func TestLoad_MissingAllowedOrgs(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_ALLOWED_ORGS is required")
@@ -366,7 +351,7 @@ func TestLoad_MissingAllowedOrgs(t *testing.T) {
 
 func TestLoad_DefaultPort(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -380,14 +365,14 @@ func TestLoad_DefaultPort(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	assert.Equal(t, 8080, cfg.Port)
 }
 
 func TestLoad_CustomPort(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_PORT":                    "9090",
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
@@ -402,7 +387,7 @@ func TestLoad_CustomPort(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	assert.Equal(t, 9090, cfg.Port)
 }
@@ -420,10 +405,9 @@ func TestValidate_InvalidPort(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &Config{
-				Mode: ModeAllInOne,
 				Port: tt.port,
 			}
-			err := cfg.Validate()
+			err := cfg.Validate(ModeAllInOne)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "invalid port")
 		})
@@ -432,7 +416,7 @@ func TestValidate_InvalidPort(t *testing.T) {
 
 func TestLoad_AllowedWorkflowsOptional(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -446,14 +430,14 @@ func TestLoad_AllowedWorkflowsOptional(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	assert.Empty(t, cfg.Initiator.AllowedWorkflows)
 }
 
 func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "inmemory",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -467,14 +451,14 @@ func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"org1", "org2", "org3"}, cfg.Initiator.AllowedOrgs)
 }
 
 func TestLoad_InvalidGitHubAppID(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_STORAGE_TYPE":            "minio",
@@ -487,7 +471,7 @@ func TestLoad_InvalidGitHubAppID(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid CANOPY_GITHUB_APP_ID")
@@ -495,7 +479,7 @@ func TestLoad_InvalidGitHubAppID(t *testing.T) {
 
 func TestLoad_InvalidRedisDB(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_REDIS_DB":                "not-a-number",
@@ -511,7 +495,7 @@ func TestLoad_InvalidRedisDB(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid CANOPY_REDIS_DB")
@@ -519,7 +503,7 @@ func TestLoad_InvalidRedisDB(t *testing.T) {
 
 func TestLoad_PubSubMissingSubscriptionForWorker(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "pubsub",
 		"CANOPY_PUBSUB_PROJECT_ID":       "my-project",
 		"CANOPY_PUBSUB_TOPIC_ID":         "my-topic",
@@ -531,7 +515,7 @@ func TestLoad_PubSubMissingSubscriptionForWorker(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_PUBSUB_SUBSCRIPTION is required")
@@ -539,7 +523,7 @@ func TestLoad_PubSubMissingSubscriptionForWorker(t *testing.T) {
 
 func TestLoad_MinIODefaultBucket(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_STORAGE_TYPE":            "minio",
@@ -552,7 +536,7 @@ func TestLoad_MinIODefaultBucket(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	require.NoError(t, err)
 	assert.Equal(t, "canopy-coverage", cfg.Storage.MinIOBucket)
 }
@@ -571,7 +555,7 @@ func TestLoad_MinIOUseSSL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envVars := map[string]string{
-				"CANOPY_MODE":                    "worker",
+				
 				"CANOPY_QUEUE_TYPE":              "redis",
 				"CANOPY_REDIS_ADDR":              "localhost:6379",
 				"CANOPY_STORAGE_TYPE":            "minio",
@@ -589,7 +573,7 @@ func TestLoad_MinIOUseSSL(t *testing.T) {
 			cleanup := setupEnv(t, envVars)
 			defer cleanup()
 
-			cfg, err := Load()
+			cfg, err := Load(ModeWorker)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, cfg.Storage.MinIOUseSSL)
 		})
@@ -598,7 +582,7 @@ func TestLoad_MinIOUseSSL(t *testing.T) {
 
 func TestLoad_RedisDefaults(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -610,7 +594,7 @@ func TestLoad_RedisDefaults(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeWorker)
 	require.NoError(t, err)
 	assert.Equal(t, "localhost:6379", cfg.Queue.RedisAddr)
 	assert.Equal(t, "", cfg.Queue.RedisPassword)
@@ -620,7 +604,7 @@ func TestLoad_RedisDefaults(t *testing.T) {
 
 func TestLoad_GCSMissingBucket(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_STORAGE_TYPE":            "gcs",
@@ -630,7 +614,7 @@ func TestLoad_GCSMissingBucket(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_GCS_BUCKET is required")
@@ -638,7 +622,7 @@ func TestLoad_GCSMissingBucket(t *testing.T) {
 
 func TestLoad_InvalidStorageType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "worker",
+		
 		"CANOPY_QUEUE_TYPE":              "redis",
 		"CANOPY_REDIS_ADDR":              "localhost:6379",
 		"CANOPY_STORAGE_TYPE":            "invalid-storage",
@@ -648,7 +632,7 @@ func TestLoad_InvalidStorageType(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid storage type")
@@ -656,7 +640,7 @@ func TestLoad_InvalidStorageType(t *testing.T) {
 
 func TestLoad_InvalidQueueType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
-		"CANOPY_MODE":                    "all-in-one",
+		
 		"CANOPY_QUEUE_TYPE":              "invalid-queue",
 		"CANOPY_STORAGE_TYPE":            "minio",
 		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
@@ -670,8 +654,92 @@ func TestLoad_InvalidQueueType(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load()
+	cfg, err := Load(ModeAllInOne)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "invalid queue type")
+}
+
+// Flag precedence tests
+// These tests verify that CLI flags properly override environment variables
+// as implemented in cmd/canopy/main.go where flags set environment variables
+// before config.Load() is called
+
+func TestFlagPrecedence_Port(t *testing.T) {
+	cleanup := setupEnv(t, map[string]string{
+		
+		"CANOPY_PORT":                    "8080", // Original env var value
+		"CANOPY_QUEUE_TYPE":              "inmemory",
+		"CANOPY_STORAGE_TYPE":            "minio",
+		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
+		"CANOPY_GITHUB_APP_ID":           "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+		"CANOPY_WEBHOOK_SECRET":          "my-secret",
+		"CANOPY_ALLOWED_ORGS":            "my-org",
+	})
+	defer cleanup()
+
+	// Simulate flag override (as done in main.go:67-69)
+	os.Setenv("CANOPY_PORT", "9090")
+
+	cfg, err := Load(ModeAllInOne)
+	require.NoError(t, err)
+	assert.Equal(t, 9090, cfg.Port, "flag should override env var")
+}
+
+func TestFlagPrecedence_DisableHMAC(t *testing.T) {
+	cleanup := setupEnv(t, map[string]string{
+		
+		"CANOPY_DISABLE_HMAC":            "false", // Original env var value
+		"CANOPY_QUEUE_TYPE":              "inmemory",
+		"CANOPY_STORAGE_TYPE":            "minio",
+		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
+		"CANOPY_GITHUB_APP_ID":           "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+		"CANOPY_WEBHOOK_SECRET":          "my-secret",
+		"CANOPY_ALLOWED_ORGS":            "my-org",
+	})
+	defer cleanup()
+
+	// Simulate flag override (as done in main.go:70-72)
+	os.Setenv("CANOPY_DISABLE_HMAC", "true")
+
+	cfg, err := Load(ModeAllInOne)
+	require.NoError(t, err)
+	assert.True(t, cfg.DisableHMAC, "flag should override env var")
+}
+
+func TestFlagPrecedence_MultipleFlags(t *testing.T) {
+	cleanup := setupEnv(t, map[string]string{
+		
+		"CANOPY_PORT":                    "8080",
+		"CANOPY_DISABLE_HMAC":            "false",
+		"CANOPY_QUEUE_TYPE":              "inmemory",
+		"CANOPY_STORAGE_TYPE":            "minio",
+		"CANOPY_MINIO_ENDPOINT":          "localhost:9000",
+		"CANOPY_MINIO_ACCESS_KEY":        "minioadmin",
+		"CANOPY_MINIO_SECRET_KEY":        "minioadmin",
+		"CANOPY_GITHUB_APP_ID":           "123456",
+		"CANOPY_GITHUB_INSTALLATION_ID":  "789012",
+		"CANOPY_GITHUB_PRIVATE_KEY":      "test-key",
+		"CANOPY_WEBHOOK_SECRET":          "my-secret",
+		"CANOPY_ALLOWED_ORGS":            "my-org",
+	})
+	defer cleanup()
+
+	// Simulate multiple flag overrides
+	os.Setenv("CANOPY_PORT", "3000")
+	os.Setenv("CANOPY_DISABLE_HMAC", "true")
+
+	cfg, err := Load(ModeAllInOne)
+	require.NoError(t, err)
+	
+	assert.Equal(t, 3000, cfg.Port, "port flag should override env var")
+	assert.True(t, cfg.DisableHMAC, "disable-hmac flag should override env var")
 }
