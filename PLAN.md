@@ -225,7 +225,7 @@ canopy/
     - Test single file merge (no-op)
     - Test empty coverage handling
 
-- [ ] **4.3** Implement diff parser (`internal/coverage/diff.go`)
+- [x] **4.3** Implement diff parser (`internal/coverage/diff.go`)
   - Parse unified diff format
   - Extract added lines per file
   - Map GitHub CommitFile objects to line numbers
