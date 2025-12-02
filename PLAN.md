@@ -118,7 +118,7 @@ canopy/
   - Config file support (optional)
   - Validation logic
 
-- [ ] **1.3** Implement CLI with flags (`cmd/canopy/main.go`)
+- [x] **1.3** Implement CLI with flags (`cmd/canopy/main.go`)
   - `--mode` (all-in-one|initiator|worker)
   - `--port` (default: 8080)
   - `--disable-hmac` for local dev
