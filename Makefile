@@ -6,8 +6,8 @@ BUILD_DIR=.
 CMD_DIR=./cmd/canopy
 DOCKER_IMAGE=canopy:latest
 DOCKER_COMPOSE_FILE=deployments/docker-compose.yml
-COVERAGE_FILE=coverage.out
-COVERAGE_HTML=coverage.html
+COVERAGE_FILE=.coverage/coverage.out
+COVERAGE_HTML=.coverage/report.html
 
 # Go parameters
 GOCMD=go
@@ -45,17 +45,18 @@ test:
 ## test-integration: Run integration tests
 test-integration:
 	@echo "Running integration tests..."
-	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -v -race ./internal/storage/integration_test.go ./internal/storage/interface.go ./internal/storage/minio.go ./internal/storage/gcs.go
+	$(GOTEST) -v -race ./internal/storage/integration_test.go ./internal/storage/interface.go ./internal/storage/minio.go ./internal/storage/gcs.go
 
 ## test-all: Run all tests including integration tests
 test-all:
 	@echo "Running all tests including integration tests..."
-	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -v -race ./...
+	$(GOTEST) -v -race ./...
 
 ## test-coverage: Run tests with coverage report
 test-coverage:
 	@echo "Running tests with coverage..."
-	TESTCONTAINERS_RYUK_DISABLED=true $(GOTEST) -coverprofile=$(COVERAGE_FILE) ./...
+	mkdir -p .coverage
+	$(GOTEST) -coverprofile=$(COVERAGE_FILE) ./...
 	@echo ""
 	@echo "Coverage summary:"
 	$(GOCMD) tool cover -func=$(COVERAGE_FILE)

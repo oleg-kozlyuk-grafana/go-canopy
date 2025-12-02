@@ -15,7 +15,33 @@ type AnalysisResult struct {
 	TotalUncovered int
 }
 
+// findMatchingDiffFile finds the diff file that matches a coverage profile.
+// Returns the diff filename, the added lines, and true if found; empty values and false otherwise.
+func findMatchingDiffFile(profile *Profile, addedLinesByFile map[string][]int) (string, []int, bool) {
+	profileFile := profile.FileName
+
+	// First try exact match
+	if addedLines, ok := addedLinesByFile[profileFile]; ok {
+		return profileFile, addedLines, true
+	}
+
+	// Try to find a diff file whose path is a suffix of the profile filename
+	// Coverage uses full module paths, diff uses relative paths
+	for diffFile, addedLines := range addedLinesByFile {
+		if strings.HasSuffix(profileFile, diffFile) {
+			return diffFile, addedLines, true
+		}
+		if strings.HasSuffix(profileFile, "/"+diffFile) {
+			return diffFile, addedLines, true
+		}
+	}
+
+	return "", nil, false
+}
+
 // AnalyzeCoverage cross-references coverage profiles with diff to find uncovered added lines.
+// Coverage profiles are the primary source - we extract uncovered lines from them,
+// then filter by the diff to only report lines that were added.
 // It takes coverage profiles and a map of added lines by file (from GetAddedLinesByFile).
 // Returns an AnalysisResult with uncovered lines grouped by file.
 func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *AnalysisResult {
@@ -25,19 +51,25 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 		TotalUncovered:  0,
 	}
 
-	// Build a map of profiles by filename for efficient lookup
-	profilesByFile := make(map[string]*Profile)
-	for _, profile := range profiles {
-		profilesByFile[profile.FileName] = profile
-	}
+	// Track which diff files have been processed via coverage
+	processedDiffFiles := make(map[string]bool)
 
-	// For each file in the diff, check coverage for added lines
-	for diffFile, addedLines := range addedLinesByFile {
+	// Step 1: Process files that have coverage data
+	for _, profile := range profiles {
+		// Find the matching diff file
+		diffFile, addedLines, found := findMatchingDiffFile(profile, addedLinesByFile)
+		if !found {
+			// File has coverage but is not in the diff - skip it
+			continue
+		}
+
+		// Mark this diff file as processed
+		processedDiffFiles[diffFile] = true
+
+		// Count total added lines for this file
 		result.TotalAdded += len(addedLines)
 
-		// Find the matching coverage profile
-		profile := findMatchingProfile(profilesByFile, diffFile)
-
+		// Check each added line to see if it's covered
 		var uncoveredLines []int
 		for _, line := range addedLines {
 			if !isLineCovered(profile, line) {
@@ -49,6 +81,16 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 		// Only add to result if there are uncovered lines
 		if len(uncoveredLines) > 0 {
 			result.UncoveredByFile[diffFile] = uncoveredLines
+		}
+	}
+
+	// Step 2: Handle diff files with NO coverage data (flag all added lines as uncovered)
+	for diffFile, addedLines := range addedLinesByFile {
+		if !processedDiffFiles[diffFile] {
+			// This file is in the diff but has no coverage data
+			result.TotalAdded += len(addedLines)
+			result.TotalUncovered += len(addedLines)
+			result.UncoveredByFile[diffFile] = addedLines
 		}
 	}
 

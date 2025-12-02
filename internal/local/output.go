@@ -37,9 +37,14 @@ func FormatResults(result *coverage.AnalysisResult, w io.Writer) error {
 		fmt.Fprintln(w)
 	}
 
-	// Print summary
-	fmt.Fprintf(w, "Summary: %d uncovered lines out of %d added lines\n",
-		result.TotalUncovered, result.TotalAdded)
+	// Print summary with percentage
+	coveragePercent := 0.0
+	if result.TotalAdded > 0 {
+		coveragePercent = float64(result.TotalAdded-result.TotalUncovered) / float64(result.TotalAdded) * 100
+	}
+
+	fmt.Fprintf(w, "Summary: %d uncovered lines out of %d added lines (%.1f%% coverage)\n",
+		result.TotalUncovered, result.TotalAdded, coveragePercent)
 
 	return nil
 }

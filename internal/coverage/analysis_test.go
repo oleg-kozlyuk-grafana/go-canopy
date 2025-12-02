@@ -115,6 +115,27 @@ func TestAnalyzeCoverage(t *testing.T) {
 			expectedTotalUncovered:0,
 		},
 		{
+			name: "file with coverage not in diff",
+			profiles: []*Profile{
+				{
+					FileName: "github.com/org/repo/other.go",
+					Mode:     "set",
+					Blocks: []ProfileBlock{
+						{StartLine: 1, EndLine: 5, Count: 0},
+						{StartLine: 6, EndLine: 10, Count: 1},
+					},
+				},
+			},
+			addedLinesByFile: map[string][]int{
+				"main.go": {1, 2, 3},
+			},
+			expectedUncoveredByFile: map[string][]int{
+				"main.go": {1, 2, 3}, // no coverage for main.go, all flagged as uncovered
+			},
+			expectedAdded:3,
+			expectedTotalUncovered:3,
+		},
+		{
 			name:     "no coverage data",
 			profiles: []*Profile{},
 			addedLinesByFile: map[string][]int{

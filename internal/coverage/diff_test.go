@@ -236,6 +236,31 @@ func TestGetAddedLinesByFile(t *testing.T) {
 			},
 		},
 		{
+			name: "exclude non-Go files",
+			fileDiffs: []*FileDiff{
+				{
+					NewName:    "main.go",
+					AddedLines: []int{1, 2},
+				},
+				{
+					NewName:    "README.md",
+					AddedLines: []int{10, 20},
+				},
+				{
+					NewName:    "config.yaml",
+					AddedLines: []int{5},
+				},
+				{
+					NewName:    "test.go",
+					AddedLines: []int{100},
+				},
+			},
+			expected: map[string][]int{
+				"main.go": {1, 2},
+				"test.go": {100},
+			},
+		},
+		{
 			name:      "empty input",
 			fileDiffs: []*FileDiff{},
 			expected:  map[string][]int{},

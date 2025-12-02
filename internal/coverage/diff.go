@@ -155,7 +155,7 @@ func ParseDiff(diffData []byte) ([]*FileDiff, error) {
 
 // GetAddedLinesByFile returns a map of filename to added line numbers.
 // The filename is normalized to use the new name (after any renames).
-// Binary files and deleted files are excluded.
+// Binary files, deleted files, and non-Go files are excluded.
 func GetAddedLinesByFile(fileDiffs []*FileDiff) map[string][]int {
 	result := make(map[string][]int)
 
@@ -167,6 +167,12 @@ func GetAddedLinesByFile(fileDiffs []*FileDiff) map[string][]int {
 
 		// Use the new filename (normalized without a/ or b/ prefix)
 		filename := diff.NewName
+
+		// Only include Go files
+		if !strings.HasSuffix(filename, ".go") {
+			continue
+		}
+
 		result[filename] = diff.AddedLines
 	}
 

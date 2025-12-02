@@ -31,7 +31,7 @@ func TestFormatResults(t *testing.T) {
 main.go
   Lines: 5, 10, 15
 
-Summary: 3 uncovered lines out of 20 added lines
+Summary: 3 uncovered lines out of 20 added lines (85.0% coverage)
 `,
 		},
 		{
@@ -52,7 +52,7 @@ handler.go
 main.go
   Lines: 5, 7
 
-Summary: 5 uncovered lines out of 25 added lines
+Summary: 5 uncovered lines out of 25 added lines (80.0% coverage)
 `,
 		},
 		{
@@ -87,7 +87,7 @@ Summary: 5 uncovered lines out of 25 added lines
 server.go
   Lines: 5-7, 10-11, 15, 20-23
 
-Summary: 10 uncovered lines out of 15 added lines
+Summary: 10 uncovered lines out of 15 added lines (33.3% coverage)
 `,
 		},
 		{
