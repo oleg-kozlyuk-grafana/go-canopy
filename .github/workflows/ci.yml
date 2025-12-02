@@ -31,8 +31,11 @@ jobs:
       - name: Build
         run: go build ./...
 
+      - name: Create coverage dir
+        run: mkdir -p .coverage
+
       - name: Run tests with coverage
-        run: go test -v -coverprofile=coverage-${{ matrix.covermode }}.out -covermode=${{ matrix.covermode }} ./...
+        run: go test -v -coverprofile=.coverage/coverage-${{ matrix.covermode }}.out -covermode=${{ matrix.covermode }} ./...
 
       - name: Test canopy with GitHubAnnotations format
         run: |
