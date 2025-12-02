@@ -50,24 +50,13 @@ This will:
 ### Example Output
 
 ```
-Analyzing coverage for local changes...
+Found 1 coverage file(s) to merge
+Uncovered lines in diff:
 
-Found 3 uncovered lines in your changes:
+internal/math/subtract.go
+  Lines: 4-6, 9-17
 
-internal/worker/processor.go:45
-  - Line not covered by tests
-
-internal/coverage/merge.go:112
-  - Line not covered by tests
-
-internal/coverage/merge.go:156
-  - Line not covered by tests
-
-Coverage summary:
-  Total changed lines: 87
-  Covered lines: 84
-  Uncovered lines: 3
-  Coverage: 96.6%
+Summary: 12 uncovered lines out of 33 added lines (63.6% coverage)
 ```
 
 ## Usage Modes
