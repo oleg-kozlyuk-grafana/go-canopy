@@ -1,4 +1,4 @@
-package storage
+package minio
 
 import (
 	"bytes"
@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
 )
 
 // TestMinIOStorage_Integration runs integration tests against a real MinIO instance.
@@ -60,7 +62,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	defer storage.Close()
 
 	t.Run("save and get cycle", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "tempo", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "tempo", Branch: "main"}
 		data := []byte("mode: set\ngithub.com/grafana/tempo/pkg/util/util.go:10.1,12.2 1 1\n")
 
 		// Save coverage
@@ -74,7 +76,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("get non-existent file returns nil", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "nonexistent", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "nonexistent", Branch: "main"}
 
 		// Get coverage that doesn't exist
 		retrieved, err := storage.GetCoverage(ctx, key)
@@ -83,7 +85,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("overwrite existing file", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "mimir", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "mimir", Branch: "main"}
 		data1 := []byte("first version\n")
 		data2 := []byte("second version with more content\n")
 
@@ -107,7 +109,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("save and get with reader", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "loki", Branch: "feature"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "loki", Branch: "feature"}
 		data := []byte("mode: set\ngithub.com/grafana/loki/pkg/logql/parser.go:50.1,55.2 3 1\n")
 		reader := bytes.NewReader(data)
 
@@ -122,7 +124,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("save with reader without size", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "pyroscope", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "pyroscope", Branch: "main"}
 		data := []byte("mode: atomic\ngithub.com/grafana/pyroscope/pkg/server/server.go:10.1,15.2 2 1\n")
 		reader := bytes.NewReader(data)
 
@@ -137,7 +139,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("multiple keys with different data", func(t *testing.T) {
-		keys := []CoverageKey{
+		keys := []storagepkg.CoverageKey{
 			{Org: "grafana", Repo: "repo1", Branch: "main"},
 			{Org: "grafana", Repo: "repo2", Branch: "main"},
 			{Org: "grafana", Repo: "repo1", Branch: "develop"},
@@ -161,9 +163,9 @@ func TestMinIOStorage_Integration(t *testing.T) {
 
 	t.Run("list coverage files", func(t *testing.T) {
 		// Save coverage for multiple repos
-		key1 := CoverageKey{Org: "test-org", Repo: "list-repo1", Branch: "main"}
-		key2 := CoverageKey{Org: "test-org", Repo: "list-repo2", Branch: "main"}
-		key3 := CoverageKey{Org: "test-org", Repo: "list-repo1", Branch: "feature"}
+		key1 := storagepkg.CoverageKey{Org: "test-org", Repo: "list-repo1", Branch: "main"}
+		key2 := storagepkg.CoverageKey{Org: "test-org", Repo: "list-repo2", Branch: "main"}
+		key3 := storagepkg.CoverageKey{Org: "test-org", Repo: "list-repo1", Branch: "feature"}
 
 		err := storage.SaveCoverage(ctx, key1, []byte("data1"))
 		require.NoError(t, err)
@@ -189,7 +191,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("empty coverage data", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "empty", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "empty", Branch: "main"}
 		data := []byte{}
 
 		// Save empty coverage
@@ -203,7 +205,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 	})
 
 	t.Run("large coverage file", func(t *testing.T) {
-		key := CoverageKey{Org: "grafana", Repo: "large", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "large", Branch: "main"}
 
 		// Generate large coverage data (1MB)
 		var buf strings.Builder
@@ -233,7 +235,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 		}
 
 		for _, branch := range specialBranches {
-			key := CoverageKey{Org: "grafana", Repo: "special", Branch: branch}
+			key := storagepkg.CoverageKey{Org: "grafana", Repo: "special", Branch: branch}
 			data := []byte("mode: set\ndata for " + branch + "\n")
 
 			// Save coverage
@@ -254,7 +256,7 @@ func TestMinIOStorage_Integration(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			go func(idx int) {
-				key := CoverageKey{
+				key := storagepkg.CoverageKey{
 					Org:    "concurrent",
 					Repo:   "test",
 					Branch: "branch-" + string(rune('A'+idx)),
@@ -344,7 +346,7 @@ func TestMinIOStorage_ErrorScenarios(t *testing.T) {
 		require.NoError(t, err)
 		defer storage.Close()
 
-		key := CoverageKey{Org: "grafana", Repo: "timeout", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "timeout", Branch: "main"}
 		data := []byte("test data")
 
 		// Create context with very short timeout
@@ -371,7 +373,7 @@ func TestMinIOStorage_ErrorScenarios(t *testing.T) {
 		require.NoError(t, err)
 		defer storage.Close()
 
-		key := CoverageKey{Org: "grafana", Repo: "timeout", Branch: "main"}
+		key := storagepkg.CoverageKey{Org: "grafana", Repo: "timeout", Branch: "main"}
 
 		// Create context with very short timeout
 		ctxWithTimeout, cancel := context.WithTimeout(ctx, 1*time.Nanosecond)
@@ -434,7 +436,7 @@ func TestMinIOStorage_BucketCreation(t *testing.T) {
 	defer storage.Close()
 
 	// Verify we can use the bucket immediately
-	key := CoverageKey{Org: "grafana", Repo: "test", Branch: "main"}
+	key := storagepkg.CoverageKey{Org: "grafana", Repo: "test", Branch: "main"}
 	data := []byte("test data")
 
 	err = storage.SaveCoverage(ctx, key, data)

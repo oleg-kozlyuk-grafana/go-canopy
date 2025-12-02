@@ -1,4 +1,4 @@
-package storage
+package gcs
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
+
+	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
 )
 
 // GCSStorage implements the Storage interface using Google Cloud Storage.
@@ -37,12 +39,12 @@ func NewGCSStorage(ctx context.Context, bucket string) (*GCSStorage, error) {
 
 // SaveCoverage stores coverage data for the given key.
 // Path format: {org}/{repo}/{branch}/coverage.out
-func (g *GCSStorage) SaveCoverage(ctx context.Context, key CoverageKey, data []byte) error {
-	if err := validateCoverageKey(key); err != nil {
+func (g *GCSStorage) SaveCoverage(ctx context.Context, key storagepkg.CoverageKey, data []byte) error {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return err
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 	obj := g.client.Bucket(g.bucket).Object(objectPath)
 
 	w := obj.NewWriter(ctx)
@@ -61,12 +63,12 @@ func (g *GCSStorage) SaveCoverage(ctx context.Context, key CoverageKey, data []b
 // GetCoverage retrieves coverage data for the given key.
 // Returns nil if the coverage file does not exist.
 // Returns an error if the retrieval operation fails (excluding not-found).
-func (g *GCSStorage) GetCoverage(ctx context.Context, key CoverageKey) ([]byte, error) {
-	if err := validateCoverageKey(key); err != nil {
+func (g *GCSStorage) GetCoverage(ctx context.Context, key storagepkg.CoverageKey) ([]byte, error) {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return nil, err
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 	obj := g.client.Bucket(g.bucket).Object(objectPath)
 
 	r, err := obj.NewReader(ctx)
@@ -90,8 +92,8 @@ func (g *GCSStorage) GetCoverage(ctx context.Context, key CoverageKey) ([]byte, 
 // SaveCoverageReader stores coverage data from a reader.
 // This is useful for streaming large coverage files without loading them into memory.
 // The size parameter helps GCS optimize the upload.
-func (g *GCSStorage) SaveCoverageReader(ctx context.Context, key CoverageKey, reader io.Reader, size int64) error {
-	if err := validateCoverageKey(key); err != nil {
+func (g *GCSStorage) SaveCoverageReader(ctx context.Context, key storagepkg.CoverageKey, reader io.Reader, size int64) error {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return err
 	}
 
@@ -99,7 +101,7 @@ func (g *GCSStorage) SaveCoverageReader(ctx context.Context, key CoverageKey, re
 		return errors.New("reader is nil")
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 	obj := g.client.Bucket(g.bucket).Object(objectPath)
 
 	w := obj.NewWriter(ctx)
@@ -124,26 +126,6 @@ func (g *GCSStorage) SaveCoverageReader(ctx context.Context, key CoverageKey, re
 func (g *GCSStorage) Close() error {
 	if g.client != nil {
 		return g.client.Close()
-	}
-	return nil
-}
-
-// formatObjectPath creates the object path from a coverage key.
-// Format: {org}/{repo}/{branch}/coverage.out
-func formatObjectPath(key CoverageKey) string {
-	return fmt.Sprintf("%s/%s/%s/coverage.out", key.Org, key.Repo, key.Branch)
-}
-
-// validateCoverageKey validates that the coverage key fields are not empty.
-func validateCoverageKey(key CoverageKey) error {
-	if key.Org == "" {
-		return errors.New("org is required")
-	}
-	if key.Repo == "" {
-		return errors.New("repo is required")
-	}
-	if key.Branch == "" {
-		return errors.New("branch is required")
 	}
 	return nil
 }

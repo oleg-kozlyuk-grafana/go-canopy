@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 )
 
@@ -34,4 +36,24 @@ type Storage interface {
 	// Close releases any resources held by the storage client.
 	// Should be called when the storage client is no longer needed.
 	Close() error
+}
+
+// FormatObjectPath creates the object path from a coverage key.
+// Format: {org}/{repo}/{branch}/coverage.out
+func FormatObjectPath(key CoverageKey) string {
+	return fmt.Sprintf("%s/%s/%s/coverage.out", key.Org, key.Repo, key.Branch)
+}
+
+// ValidateCoverageKey validates that the coverage key fields are not empty.
+func ValidateCoverageKey(key CoverageKey) error {
+	if key.Org == "" {
+		return errors.New("org is required")
+	}
+	if key.Repo == "" {
+		return errors.New("repo is required")
+	}
+	if key.Branch == "" {
+		return errors.New("branch is required")
+	}
+	return nil
 }

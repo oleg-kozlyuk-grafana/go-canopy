@@ -1,4 +1,4 @@
-package storage
+package minio
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+
+	storagepkg "github.com/oleg-kozlyuk/canopy/internal/storage"
 )
 
 // MinIOStorage implements the Storage interface using MinIO (S3-compatible storage).
@@ -72,12 +74,12 @@ func NewMinIOStorage(ctx context.Context, config MinIOConfig) (*MinIOStorage, er
 
 // SaveCoverage stores coverage data for the given key.
 // Path format: {org}/{repo}/{branch}/coverage.out
-func (m *MinIOStorage) SaveCoverage(ctx context.Context, key CoverageKey, data []byte) error {
-	if err := validateCoverageKey(key); err != nil {
+func (m *MinIOStorage) SaveCoverage(ctx context.Context, key storagepkg.CoverageKey, data []byte) error {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return err
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 	reader := bytes.NewReader(data)
 
 	_, err := m.client.PutObject(ctx, m.bucket, objectPath, reader, int64(len(data)), minio.PutObjectOptions{
@@ -93,12 +95,12 @@ func (m *MinIOStorage) SaveCoverage(ctx context.Context, key CoverageKey, data [
 // GetCoverage retrieves coverage data for the given key.
 // Returns nil if the coverage file does not exist.
 // Returns an error if the retrieval operation fails (excluding not-found).
-func (m *MinIOStorage) GetCoverage(ctx context.Context, key CoverageKey) ([]byte, error) {
-	if err := validateCoverageKey(key); err != nil {
+func (m *MinIOStorage) GetCoverage(ctx context.Context, key storagepkg.CoverageKey) ([]byte, error) {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return nil, err
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 
 	obj, err := m.client.GetObject(ctx, m.bucket, objectPath, minio.GetObjectOptions{})
 	if err != nil {
@@ -123,8 +125,8 @@ func (m *MinIOStorage) GetCoverage(ctx context.Context, key CoverageKey) ([]byte
 // SaveCoverageReader stores coverage data from a reader.
 // This is useful for streaming large coverage files without loading them into memory.
 // The size parameter helps MinIO optimize the upload.
-func (m *MinIOStorage) SaveCoverageReader(ctx context.Context, key CoverageKey, reader io.Reader, size int64) error {
-	if err := validateCoverageKey(key); err != nil {
+func (m *MinIOStorage) SaveCoverageReader(ctx context.Context, key storagepkg.CoverageKey, reader io.Reader, size int64) error {
+	if err := storagepkg.ValidateCoverageKey(key); err != nil {
 		return err
 	}
 
@@ -132,7 +134,7 @@ func (m *MinIOStorage) SaveCoverageReader(ctx context.Context, key CoverageKey, 
 		return errors.New("reader is nil")
 	}
 
-	objectPath := formatObjectPath(key)
+	objectPath := storagepkg.FormatObjectPath(key)
 
 	// If size is not provided, MinIO will use chunked upload
 	uploadSize := size
