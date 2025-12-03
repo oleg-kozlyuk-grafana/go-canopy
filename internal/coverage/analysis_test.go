@@ -111,8 +111,8 @@ func TestAnalyzeCoverage(t *testing.T) {
 			},
 			expectedTotalLines:       33, // server: 11+11=22, handler: 11 = 33
 			expectedTotalCovered:     22, // server: 11, handler: 11 = 22
-			expectedDiffAddedLines:   4,  // 2 in server.go + 2 in handler.go
-			expectedDiffAddedCovered: 2,  // line 15 (server) and line 10 (handler) are covered; line 20 ignored as non-instrumented
+			expectedDiffAddedLines:   3,  // only instrumented lines: 15, 35 in server.go + 10 in handler.go (line 20 ignored)
+			expectedDiffAddedCovered: 2,  // line 15 (server) and line 10 (handler) are covered
 		},
 		{
 			name:                     "empty diff",
@@ -200,7 +200,7 @@ func TestAnalyzeCoverage(t *testing.T) {
 			},
 			expectedTotalLines:       6, // 3 + 3 lines
 			expectedTotalCovered:     3, // first block only
-			expectedDiffAddedLines:   6, // 6 lines added (including non-instrumented)
+			expectedDiffAddedLines:   2, // only instrumented lines: 6 and 11
 			expectedDiffAddedCovered: 1, // only line 6 is covered and instrumented
 		},
 	}
