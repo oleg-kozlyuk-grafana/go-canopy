@@ -1,4 +1,4 @@
-.PHONY: help build build-all build-canopy build-initiator build-worker build-all-in-one test test-coverage lint docker-build local-up local-down clean deps
+.PHONY: help build build-all build-canopy build-webhook build-worker build-all-in-one test test-coverage lint docker-build local-up local-down clean deps
 
 # Variables
 BUILD_DIR=.
@@ -9,13 +9,13 @@ COVERAGE_HTML=.coverage/report.html
 
 # Executables
 CANOPY_BINARY=canopy
-INITIATOR_BINARY=canopy-initiator
+WEBHOOK_BINARY=canopy-webhook
 WORKER_BINARY=canopy-worker
 ALL_IN_ONE_BINARY=canopy-all-in-one
 
 # Command directories
 CANOPY_CMD=./cmd/canopy
-INITIATOR_CMD=./cmd/initiator
+WEBHOOK_CMD=./cmd/webhook
 WORKER_CMD=./cmd/worker
 ALL_IN_ONE_CMD=./cmd/all-in-one
 
@@ -44,8 +44,8 @@ help:
 ## build: Build all binaries
 build: build-all
 
-## build-all: Build all binaries (canopy, initiator, worker, all-in-one)
-build-all: build-canopy build-initiator build-worker build-all-in-one
+## build-all: Build all binaries (canopy, webhook, worker, all-in-one)
+build-all: build-canopy build-webhook build-worker build-all-in-one
 	@echo "All binaries built successfully"
 
 ## build-canopy: Build the canopy binary (local mode)
@@ -54,11 +54,11 @@ build-canopy:
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(CANOPY_BINARY) $(CANOPY_CMD)
 	@echo "Build complete: $(BUILD_DIR)/$(CANOPY_BINARY)"
 
-## build-initiator: Build the initiator binary
-build-initiator:
-	@echo "Building $(INITIATOR_BINARY)..."
-	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(INITIATOR_BINARY) $(INITIATOR_CMD)
-	@echo "Build complete: $(BUILD_DIR)/$(INITIATOR_BINARY)"
+## build-webhook: Build the webhook binary
+build-webhook:
+	@echo "Building $(WEBHOOK_BINARY)..."
+	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(WEBHOOK_BINARY) $(WEBHOOK_CMD)
+	@echo "Build complete: $(BUILD_DIR)/$(WEBHOOK_BINARY)"
 
 ## build-worker: Build the worker binary
 build-worker:
@@ -175,7 +175,7 @@ local-logs:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -f $(BUILD_DIR)/$(CANOPY_BINARY)
-	rm -f $(BUILD_DIR)/$(INITIATOR_BINARY)
+	rm -f $(BUILD_DIR)/$(WEBHOOK_BINARY)
 	rm -f $(BUILD_DIR)/$(WORKER_BINARY)
 	rm -f $(BUILD_DIR)/$(ALL_IN_ONE_BINARY)
 	rm -rf $(COVERAGE_FILE)
@@ -187,10 +187,10 @@ run-canopy: build-canopy
 	@echo "Running $(CANOPY_BINARY)..."
 	./$(CANOPY_BINARY)
 
-## run-initiator: Build and run initiator
-run-initiator: build-initiator
-	@echo "Running $(INITIATOR_BINARY)..."
-	./$(INITIATOR_BINARY)
+## run-webhook: Build and run webhook
+run-webhook: build-webhook
+	@echo "Running $(WEBHOOK_BINARY)..."
+	./$(WEBHOOK_BINARY)
 
 ## run-worker: Build and run worker
 run-worker: build-worker
@@ -206,7 +206,7 @@ run-all-in-one: build-all-in-one
 install:
 	@echo "Installing binaries..."
 	$(GOCMD) install $(CANOPY_CMD)
-	$(GOCMD) install $(INITIATOR_CMD)
+	$(GOCMD) install $(WEBHOOK_CMD)
 	$(GOCMD) install $(WORKER_CMD)
 	$(GOCMD) install $(ALL_IN_ONE_CMD)
 	@echo "Installed to $(shell go env GOPATH)/bin/"

@@ -29,13 +29,13 @@ func main() {
 var rootCmd = &cobra.Command{
 	Use:   "canopy-all-in-one",
 	Short: "Canopy All-in-One - Complete coverage service",
-	Long: `Canopy All-in-One runs both initiator and worker components in a single process.
+	Long: `Canopy All-in-One runs both webhook and worker components in a single process.
 
 This mode is designed for local development and testing. It runs the webhook handler
-(initiator) and coverage processor (worker) together, typically with an in-memory
+and coverage processor (worker) together, typically with an in-memory
 message queue.
 
-For production deployments, use separate initiator and worker executables.`,
+For production deployments, use separate webhook and worker executables.`,
 	RunE: run,
 }
 
@@ -81,9 +81,9 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Queue type: %s\n", cfg.Queue.Type)
 	fmt.Printf("Storage type: %s\n", cfg.Storage.Type)
 	fmt.Printf("GitHub App ID: %d\n", cfg.GitHub.AppID)
-	fmt.Printf("Allowed orgs: %v\n", cfg.Initiator.AllowedOrgs)
+	fmt.Printf("Allowed orgs: %v\n", cfg.Webhook.AllowedOrgs)
 
-	// TODO: Start the all-in-one service (both initiator and worker)
+	// TODO: Start the all-in-one service (both webhook and worker)
 	fmt.Println("All-in-one service not yet implemented")
 	return nil
 }

@@ -27,12 +27,12 @@ func main() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "canopy-initiator",
-	Short: "Canopy Initiator - GitHub webhook handler",
-	Long: `Canopy Initiator receives GitHub workflow_run webhooks, validates them,
+	Use:   "canopy-webhook",
+	Short: "Canopy Webhook - GitHub webhook handler",
+	Long: `Canopy Webhook receives GitHub workflow_run webhooks, validates them,
 and publishes work requests to a message queue for processing by workers.
 
-The initiator does not have GitHub credentials and operates on the principle
+The webhook handler does not have GitHub credentials and operates on the principle
 of least privilege - it only validates webhooks and publishes messages.`,
 	RunE: run,
 }
@@ -41,7 +41,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Canopy Initiator %s\n", version)
+		fmt.Printf("Canopy Webhook %s\n", version)
 		fmt.Printf("  commit: %s\n", commit)
 		fmt.Printf("  built:  %s\n", date)
 	},
@@ -66,23 +66,23 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load configuration
-	cfg, err := config.Load(config.ModeInitiator)
+	cfg, err := config.Load(config.ModeWebhook)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Print startup information
-	fmt.Printf("Starting Canopy Initiator on port %d\n", cfg.Port)
+	fmt.Printf("Starting Canopy Webhook on port %d\n", cfg.Port)
 	if cfg.DisableHMAC {
 		fmt.Println("WARNING: HMAC validation is disabled. This should only be used for local development.")
 	}
 	fmt.Printf("Queue type: %s\n", cfg.Queue.Type)
-	fmt.Printf("Allowed orgs: %v\n", cfg.Initiator.AllowedOrgs)
-	if len(cfg.Initiator.AllowedWorkflows) > 0 {
-		fmt.Printf("Allowed workflows: %v\n", cfg.Initiator.AllowedWorkflows)
+	fmt.Printf("Allowed orgs: %v\n", cfg.Webhook.AllowedOrgs)
+	if len(cfg.Webhook.AllowedWorkflows) > 0 {
+		fmt.Printf("Allowed workflows: %v\n", cfg.Webhook.AllowedWorkflows)
 	}
 
-	// TODO: Start the initiator service
-	fmt.Println("Initiator service not yet implemented")
+	// TODO: Start the webhook service
+	fmt.Println("Webhook service not yet implemented")
 	return nil
 }

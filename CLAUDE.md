@@ -7,18 +7,18 @@ This file provides context and guidelines for working on the Canopy project.
 Canopy is a Go service that provides code coverage annotations on GitHub pull requests. It receives GitHub workflow_run webhooks, processes Go coverage files, and posts check runs with annotations highlighting uncovered lines.
 
 **Deployment Modes:**
-- **All-in-one**: Single process for local development (initiator + worker)
-- **Split mode**: Separate initiator and worker processes for production
+- **All-in-one**: Single process for local development (webhook + worker)
+- **Split mode**: Separate webhook and worker processes for production
 
 **Production Flow:**
 ```
-GitHub Webhook → Initiator → Message Queue → Worker → GitHub API + Storage
+GitHub Webhook → Webhook Handler → Message Queue → Worker → GitHub API + Storage
 ```
 
 ## Architecture Principles
 
 ### Security Model
-- **Initiator**: No GitHub credentials, validates HMAC, publishes to queue
+- **Webhook Handler**: No GitHub credentials, validates HMAC, publishes to queue
 - **Worker**: Has GitHub credentials, processes coverage, updates PRs
 - This separation follows principle of least privilege
 
@@ -33,7 +33,7 @@ All external dependencies use interfaces to enable testing and flexibility:
 ```
 internal/
 ├── config/         # Configuration management (env vars, flags, validation)
-├── initiator/      # Webhook handler, HMAC validation, event filtering
+├── webhook/        # Webhook handler, HMAC validation, event filtering
 ├── worker/         # Coverage processing orchestration
 ├── coverage/       # Coverage parsing, merging (gocovmerge algorithm), analysis
 ├── queue/          # Message queue abstraction and implementations
@@ -82,7 +82,7 @@ internal/
 - Use constant-time comparison
 - Support --disable-hmac flag for local dev
 
-#### Initiator Validation Flow
+#### Webhook Validation Flow
 1. Validate HMAC signature (unless disabled)
 2. Check event action == "completed"
 3. Check org in allowed list (hardcoded: "grafana")

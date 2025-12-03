@@ -98,9 +98,9 @@ func TestLoad_AllInOneMode_Success(t *testing.T) {
 	assert.Equal(t, "minioadmin", cfg.Storage.MinIOAccessKey)
 	assert.Equal(t, int64(123456), cfg.GitHub.AppID)
 	assert.Equal(t, int64(789012), cfg.GitHub.InstallationID)
-	assert.Equal(t, "my-secret", cfg.Initiator.WebhookSecret)
-	assert.Equal(t, []string{"my-org", "another-org"}, cfg.Initiator.AllowedOrgs)
-	assert.Equal(t, []string{"CI", "Build"}, cfg.Initiator.AllowedWorkflows)
+	assert.Equal(t, "my-secret", cfg.Webhook.WebhookSecret)
+	assert.Equal(t, []string{"my-org", "another-org"}, cfg.Webhook.AllowedOrgs)
+	assert.Equal(t, []string{"CI", "Build"}, cfg.Webhook.AllowedWorkflows)
 }
 
 func TestLoad_AllInOneMode_WithRedis(t *testing.T) {
@@ -163,7 +163,7 @@ func TestLoad_AllInOneMode_WithPubSub(t *testing.T) {
 	assert.Equal(t, "my-bucket", cfg.Storage.GCSBucket)
 }
 
-func TestLoad_InitiatorMode_Success(t *testing.T) {
+func TestLoad_WebhookMode_Success(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
 
 		"CANOPY_PORT":              "8080",
@@ -176,15 +176,15 @@ func TestLoad_InitiatorMode_Success(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load(ModeInitiator)
+	cfg, err := Load(ModeWebhook)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
 	assert.Equal(t, QueueTypePubSub, cfg.Queue.Type)
-	assert.Equal(t, "my-org", cfg.Initiator.AllowedOrgs[0])
+	assert.Equal(t, "my-org", cfg.Webhook.AllowedOrgs[0])
 }
 
-func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
+func TestLoad_WebhookMode_MissingQueueType(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
 
 		"CANOPY_WEBHOOK_SECRET": "my-secret",
@@ -192,13 +192,13 @@ func TestLoad_InitiatorMode_MissingQueueType(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load(ModeInitiator)
+	cfg, err := Load(ModeWebhook)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_QUEUE_TYPE is required")
 }
 
-func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
+func TestLoad_WebhookMode_InMemoryQueueNotAllowed(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
 
 		"CANOPY_QUEUE_TYPE":     "inmemory",
@@ -207,13 +207,13 @@ func TestLoad_InitiatorMode_InMemoryQueueNotAllowed(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load(ModeInitiator)
+	cfg, err := Load(ModeWebhook)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
-	assert.Contains(t, err.Error(), "invalid queue type for initiator")
+	assert.Contains(t, err.Error(), "invalid queue type for webhook")
 }
 
-func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
+func TestLoad_WebhookMode_MissingWebhookSecret(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
 
 		"CANOPY_QUEUE_TYPE":   "redis",
@@ -223,13 +223,13 @@ func TestLoad_InitiatorMode_MissingWebhookSecret(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load(ModeInitiator)
+	cfg, err := Load(ModeWebhook)
 	assert.Error(t, err)
 	assert.Nil(t, cfg)
 	assert.Contains(t, err.Error(), "CANOPY_WEBHOOK_SECRET is required")
 }
 
-func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
+func TestLoad_WebhookMode_DisableHMAC(t *testing.T) {
 	cleanup := setupEnv(t, map[string]string{
 
 		"CANOPY_QUEUE_TYPE":   "redis",
@@ -239,11 +239,11 @@ func TestLoad_InitiatorMode_DisableHMAC(t *testing.T) {
 	})
 	defer cleanup()
 
-	cfg, err := Load(ModeInitiator)
+	cfg, err := Load(ModeWebhook)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 	assert.True(t, cfg.DisableHMAC)
-	assert.Equal(t, "", cfg.Initiator.WebhookSecret)
+	assert.Equal(t, "", cfg.Webhook.WebhookSecret)
 }
 
 func TestLoad_WorkerMode_Success(t *testing.T) {
@@ -429,7 +429,7 @@ func TestLoad_AllowedWorkflowsOptional(t *testing.T) {
 
 	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
-	assert.Empty(t, cfg.Initiator.AllowedWorkflows)
+	assert.Empty(t, cfg.Webhook.AllowedWorkflows)
 }
 
 func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
@@ -450,7 +450,7 @@ func TestLoad_AllowedOrgsWithSpaces(t *testing.T) {
 
 	cfg, err := Load(ModeAllInOne)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"org1", "org2", "org3"}, cfg.Initiator.AllowedOrgs)
+	assert.Equal(t, []string{"org1", "org2", "org3"}, cfg.Webhook.AllowedOrgs)
 }
 
 func TestLoad_InvalidGitHubAppID(t *testing.T) {

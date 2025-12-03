@@ -8,20 +8,20 @@ Canopy is a Go service that provides code coverage annotations on GitHub pull re
 
 ### Deployment Modes
 
-1. **All-in-one mode**: Single process for local development (initiator + worker)
-2. **Split mode**: Separate initiator and worker processes for production
+1. **All-in-one mode**: Single process for local development (webhook + worker)
+2. **Split mode**: Separate webhook and worker processes for production
 
 ### Production Flow
 
 ```
-GitHub Webhook → Initiator (Cloud Run) → Pub/Sub → Worker (Cloud Run) → GitHub API
+GitHub Webhook → Webhook Handler (Cloud Run) → Pub/Sub → Worker (Cloud Run) → GitHub API
                                                           ↓
                                                      GCS Bucket
 ```
 
 ### Security Model
 
-- Initiator: No GitHub credentials, validates HMAC, publishes to queue
+- Webhook Handler: No GitHub credentials, validates HMAC, publishes to queue
 - Worker: Has GitHub credentials, processes coverage, updates PRs
 
 ## Technology Stack
@@ -45,7 +45,7 @@ canopy/
 │   ├── config/
 │   │   ├── config.go                  # Configuration management
 │   │   └── config_test.go
-│   ├── initiator/
+│   ├── webhook/
 │   │   ├── handler.go                 # Webhook HTTP handler
 │   │   ├── hmac.go                    # HMAC signature validation
 │   │   └── validator.go               # Event validation (org, workflow)
@@ -79,7 +79,7 @@ canopy/
 │   ├── variables.tf
 │   ├── outputs.tf
 │   ├── providers.tf
-│   ├── cloud_run.tf                   # Initiator & Worker services
+│   ├── cloud_run.tf                   # Webhook & Worker services
 │   ├── pubsub.tf                      # Topic, subscription, DLQ
 │   ├── storage.tf                     # GCS bucket
 │   ├── iam.tf                         # Service accounts, IAM bindings
@@ -119,7 +119,7 @@ canopy/
   - Validation logic
 
 - [x] **1.3** Implement CLI with flags (`cmd/canopy/main.go`)
-  - `--mode` (all-in-one|initiator|worker)
+  - `--mode` (all-in-one|webhook|worker)
   - `--port` (default: 8080)
   - `--disable-hmac` for local dev
   - Environment variable support
@@ -249,9 +249,9 @@ canopy/
     - Test coverage comparison (increase/decrease)
     - Integration test for full analysis pipeline
 
-### Phase 5: Initiator Service
+### Phase 5: Webhook Handler Service
 
-- [x] **5.1** Implement HMAC validation (`internal/initiator/hmac.go`)
+- [x] **5.1** Implement HMAC validation (`internal/webhook/hmac.go`)
   - Parse `X-Hub-Signature-256` header
   - Compute HMAC-SHA256 of payload
   - Constant-time comparison
@@ -274,7 +274,7 @@ canopy/
     - Test disallowed workflow → returns error
     - Test non-completed action → returns error
 
-- [ ] **5.3** Implement webhook handler (`internal/initiator/handler.go`)
+- [ ] **5.3** Implement webhook handler (`internal/webhook/handler.go`)
   - Parse webhook payload
   - Validate HMAC signature (unless disabled)
   - Validate event criteria
@@ -288,7 +288,7 @@ canopy/
     - Test validation failures → appropriate status codes
     - Mock queue to verify message publishing
 
-- [ ] **5.4** Wire up initiator in main.go
+- [ ] **5.4** Wire up webhook handler in main.go
   - Initialize queue client
   - Create handler with dependencies
   - Register route: POST /webhook
@@ -403,7 +403,7 @@ canopy/
 - [ ] **8.1** Implement combined mode in main.go
   - Use in-memory queue
   - Start worker goroutine
-  - Start initiator HTTP server
+  - Start webhook HTTP server
   - Handle graceful shutdown of both
   - **Tests**:
     - End-to-end integration test: webhook → coverage processing flow
@@ -537,24 +537,24 @@ canopy/
   - Uniform bucket-level access
 
 - [ ] **12.5** Implement IAM resources (`terraform/iam.tf`)
-  - Service account for initiator
+  - Service account for webhook
   - Service account for worker
   - IAM bindings:
-    - Initiator can publish to Pub/Sub
+    - Webhook can publish to Pub/Sub
     - Worker can subscribe to Pub/Sub
     - Worker can read/write GCS
     - Worker can access secrets
 
 - [ ] **12.6** Implement Secret Manager resources (`terraform/secrets.tf`)
-  - Secret: webhook secret (for initiator)
+  - Secret: webhook secret (for webhook handler)
   - Secret: GitHub App private key (for worker)
   - Secret versions
   - IAM bindings for secret access
 
 - [ ] **12.7** Implement Cloud Run services (`terraform/cloud_run.tf`)
   - Artifact Registry repository
-  - Initiator Cloud Run service:
-    - Mode: initiator
+  - Webhook Cloud Run service:
+    - Mode: webhook
     - Env vars: allowed_org, allowed_workflows, pubsub config
     - Service account
     - Public access (for GitHub webhooks)
@@ -568,7 +568,7 @@ canopy/
     - Longer timeout (10 minutes)
 
 - [ ] **12.8** Create outputs (`terraform/outputs.tf`)
-  - Initiator URL (webhook endpoint)
+  - Webhook URL (webhook endpoint)
   - Worker URL
   - Coverage bucket name
 
@@ -653,7 +653,7 @@ canopy/
 ### Security
 - HMAC validation prevents unauthorized webhooks
 - Only worker has GitHub credentials (principle of least privilege)
-- Initiator passes minimal context (org, repo, run ID)
+- Webhook handler passes minimal context (org, repo, run ID)
 - Secrets stored in Secret Manager, not env vars
 
 ## Testing Strategy
@@ -694,7 +694,7 @@ test-coverage:
 ## Infrastructure Requirements
 
 ### GCP Resources
-- 2 Cloud Run services (initiator, worker)
+- 2 Cloud Run services (webhook, worker)
 - 1 Pub/Sub topic + subscription + DLQ
 - 1 GCS bucket
 - 2 service accounts

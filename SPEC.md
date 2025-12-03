@@ -7,16 +7,16 @@ This folder contains scaffold for project Canopy, a small service that helps imp
 This project consists of separate executables for different deployment scenarios:
 
 * `canopy` - Local coverage analysis tool (analyzes local coverage against git diff)
-* `canopy-initiator` - GitHub webhook handler for production
+* `canopy-webhook` - GitHub webhook handler for production
 * `canopy-worker` - Coverage processor for production
-* `canopy-all-in-one` - Combined initiator + worker for local development/testing
+* `canopy-all-in-one` - Combined webhook + worker for local development/testing
 
 ### Production Architecture
 
 In PROD, the architecture is:
 
 ```
-GitHub --webhook-> canopy-initiator --message queue-> canopy-worker
+GitHub --webhook-> canopy-webhook --message queue-> canopy-worker
                         |                                    |
                         |                                    |
                     (No GitHub creds)              (GitHub creds + Storage)
@@ -31,7 +31,7 @@ Deployment is planned in GCP using Terraform, Cloud Run and Pub/Sub as message q
 - No server, no external dependencies
 - Usage: `canopy --coverage .coverage`
 
-**canopy-initiator** - Production webhook handler
+**canopy-webhook** - Production webhook handler
 - Receives GitHub workflow_run webhooks
 - Validates HMAC signatures
 - Publishes work requests to message queue
@@ -46,19 +46,19 @@ Deployment is planned in GCP using Terraform, Cloud Run and Pub/Sub as message q
 - No CLI flags (configured via environment variables)
 
 **canopy-all-in-one** - Local development mode
-- Runs both initiator and worker in single process
+- Runs both webhook and worker in single process
 - Typically uses in-memory queue and MinIO storage
 - Flags: `--port`, `--disable-hmac`
 
 ## Security
 
-Only worker has GitHub credentials, initiator builds and sends a message with only org/repo name and workflow ID, providing isolated context. App should support authentication both as an app and via PAT.
+Only worker has GitHub credentials, webhook handler builds and sends a message with only org/repo name and workflow ID, providing isolated context. App should support authentication both as an app and via PAT.
 
 ## Workflow
 
-### Initiator
+### Webhook Handler
 
-1.Initiator receives a workflow_run webhook from GitHub
+1.Webhook handler receives a workflow_run webhook from GitHub
 1.HMAC signature is validated and rejected if needed
 1.Event type is matched == completed
 1.Org is matched == grafana
@@ -98,7 +98,7 @@ canopy --coverage .coverage
 
 ### All-in-One Development Mode
 ```bash
-# Run both initiator and worker together
+# Run both webhook and worker together
 canopy-all-in-one --port 8080 --disable-hmac
 ```
 
@@ -122,7 +122,7 @@ make build-all
 
 # Or build individually
 make build-canopy
-make build-initiator
+make build-webhook
 make build-worker
 make build-all-in-one
 ```

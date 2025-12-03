@@ -11,10 +11,10 @@ import (
 type Mode string
 
 const (
-	ModeAllInOne  Mode = "all-in-one"
-	ModeInitiator Mode = "initiator"
-	ModeWorker    Mode = "worker"
-	ModeLocal     Mode = "local"
+	ModeAllInOne Mode = "all-in-one"
+	ModeWebhook  Mode = "webhook"
+	ModeWorker   Mode = "worker"
+	ModeLocal    Mode = "local"
 )
 
 // QueueType represents the type of message queue to use
@@ -51,8 +51,8 @@ type Config struct {
 	// GitHub configuration
 	GitHub GitHubConfig
 
-	// Initiator configuration
-	Initiator InitiatorConfig
+	// Webhook configuration
+	Webhook WebhookConfig
 }
 
 // QueueConfig holds message queue configuration
@@ -94,8 +94,8 @@ type GitHubConfig struct {
 	PrivateKey     string // PEM-encoded private key
 }
 
-// InitiatorConfig holds initiator-specific configuration
-type InitiatorConfig struct {
+// WebhookConfig holds webhook-specific configuration
+type WebhookConfig struct {
 	// Webhook validation
 	WebhookSecret string
 
@@ -129,8 +129,8 @@ func Load(mode Mode) (*Config, error) {
 		if err := cfg.loadAllInOneConfig(mode); err != nil {
 			return nil, err
 		}
-	case ModeInitiator:
-		if err := cfg.loadInitiatorConfig(mode); err != nil {
+	case ModeWebhook:
+		if err := cfg.loadWebhookConfig(mode); err != nil {
 			return nil, err
 		}
 	case ModeWorker:
@@ -181,20 +181,20 @@ func (c *Config) loadAllInOneConfig(mode Mode) error {
 		return err
 	}
 
-	// Initiator settings
-	if err := c.loadInitiatorSettings(); err != nil {
+	// Webhook settings
+	if err := c.loadWebhookSettings(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// loadInitiatorConfig loads config for initiator mode
-func (c *Config) loadInitiatorConfig(mode Mode) error {
+// loadWebhookConfig loads config for webhook mode
+func (c *Config) loadWebhookConfig(mode Mode) error {
 	// Queue (required)
 	queueType := getEnv("CANOPY_QUEUE_TYPE", "")
 	if queueType == "" {
-		return fmt.Errorf("CANOPY_QUEUE_TYPE is required in initiator mode")
+		return fmt.Errorf("CANOPY_QUEUE_TYPE is required in webhook mode")
 	}
 	c.Queue.Type = QueueType(queueType)
 
@@ -208,11 +208,11 @@ func (c *Config) loadInitiatorConfig(mode Mode) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("invalid queue type for initiator: %s (must be redis or pubsub)", queueType)
+		return fmt.Errorf("invalid queue type for webhook: %s (must be redis or pubsub)", queueType)
 	}
 
-	// Initiator settings
-	if err := c.loadInitiatorSettings(); err != nil {
+	// Webhook settings
+	if err := c.loadWebhookSettings(); err != nil {
 		return err
 	}
 
@@ -355,11 +355,11 @@ func (c *Config) loadGitHubConfig() error {
 	return nil
 }
 
-// loadInitiatorSettings loads initiator-specific settings
-func (c *Config) loadInitiatorSettings() error {
+// loadWebhookSettings loads webhook-specific settings
+func (c *Config) loadWebhookSettings() error {
 	// Webhook secret (optional if HMAC is disabled)
-	c.Initiator.WebhookSecret = getEnv("CANOPY_WEBHOOK_SECRET", "")
-	if !c.DisableHMAC && c.Initiator.WebhookSecret == "" {
+	c.Webhook.WebhookSecret = getEnv("CANOPY_WEBHOOK_SECRET", "")
+	if !c.DisableHMAC && c.Webhook.WebhookSecret == "" {
 		return fmt.Errorf("CANOPY_WEBHOOK_SECRET is required when HMAC validation is enabled")
 	}
 
@@ -368,17 +368,17 @@ func (c *Config) loadInitiatorSettings() error {
 	if allowedOrgsStr == "" {
 		return fmt.Errorf("CANOPY_ALLOWED_ORGS is required")
 	}
-	c.Initiator.AllowedOrgs = strings.Split(allowedOrgsStr, ",")
-	for i := range c.Initiator.AllowedOrgs {
-		c.Initiator.AllowedOrgs[i] = strings.TrimSpace(c.Initiator.AllowedOrgs[i])
+	c.Webhook.AllowedOrgs = strings.Split(allowedOrgsStr, ",")
+	for i := range c.Webhook.AllowedOrgs {
+		c.Webhook.AllowedOrgs[i] = strings.TrimSpace(c.Webhook.AllowedOrgs[i])
 	}
 
 	// Allowed workflows (optional, empty means all workflows allowed)
 	allowedWorkflowsStr := getEnv("CANOPY_ALLOWED_WORKFLOWS", "")
 	if allowedWorkflowsStr != "" {
-		c.Initiator.AllowedWorkflows = strings.Split(allowedWorkflowsStr, ",")
-		for i := range c.Initiator.AllowedWorkflows {
-			c.Initiator.AllowedWorkflows[i] = strings.TrimSpace(c.Initiator.AllowedWorkflows[i])
+		c.Webhook.AllowedWorkflows = strings.Split(allowedWorkflowsStr, ",")
+		for i := range c.Webhook.AllowedWorkflows {
+			c.Webhook.AllowedWorkflows[i] = strings.TrimSpace(c.Webhook.AllowedWorkflows[i])
 		}
 	}
 
@@ -388,10 +388,10 @@ func (c *Config) loadInitiatorSettings() error {
 // validateMode validates that the mode is valid
 func validateMode(mode Mode) error {
 	switch mode {
-	case ModeAllInOne, ModeInitiator, ModeWorker, ModeLocal:
+	case ModeAllInOne, ModeWebhook, ModeWorker, ModeLocal:
 		return nil
 	default:
-		return fmt.Errorf("invalid mode: %s (must be all-in-one, initiator, worker, or local)", mode)
+		return fmt.Errorf("invalid mode: %s (must be all-in-one, webhook, worker, or local)", mode)
 	}
 }
 
@@ -415,19 +415,19 @@ func (c *Config) Validate(mode Mode) error {
 		if c.GitHub.AppID == 0 {
 			return fmt.Errorf("GitHub App ID is required")
 		}
-		if len(c.Initiator.AllowedOrgs) == 0 {
+		if len(c.Webhook.AllowedOrgs) == 0 {
 			return fmt.Errorf("at least one allowed org is required")
 		}
 
-	case ModeInitiator:
-		// Initiator needs queue and filtering config
+	case ModeWebhook:
+		// Webhook needs queue and filtering config
 		if c.Queue.Type == "" {
 			return fmt.Errorf("queue type is required")
 		}
 		if c.Queue.Type == QueueTypeInMemory {
-			return fmt.Errorf("in-memory queue cannot be used in initiator mode")
+			return fmt.Errorf("in-memory queue cannot be used in webhook mode")
 		}
-		if len(c.Initiator.AllowedOrgs) == 0 {
+		if len(c.Webhook.AllowedOrgs) == 0 {
 			return fmt.Errorf("at least one allowed org is required")
 		}
 

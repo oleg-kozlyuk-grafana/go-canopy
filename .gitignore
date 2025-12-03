@@ -1,5 +1,7 @@
 # Executable files
 /canopy*
+/all-in-one
+/webhook
 
 # Coverage artifacts
 .coverage

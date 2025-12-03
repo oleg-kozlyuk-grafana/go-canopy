@@ -53,10 +53,10 @@ func findMatchingDiffFile(profile *Profile, addedLinesByFile map[string][]int) (
 // Returns an AnalysisResult with uncovered lines grouped by file.
 func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *AnalysisResult {
 	result := &AnalysisResult{
-		UncoveredByFile: make(map[string][]int),
-		TotalLines:      0,
-		TotalCovered:    0,
-		DiffAddedLines:  0,
+		UncoveredByFile:  make(map[string][]int),
+		TotalLines:       0,
+		TotalCovered:     0,
+		DiffAddedLines:   0,
 		DiffAddedCovered: 0,
 	}
 
@@ -82,9 +82,6 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 			continue
 		}
 
-		// Count total added lines for this file
-		result.DiffAddedLines += len(addedLines)
-
 		// Check each added line to see if it's covered
 		var uncoveredLines []int
 		for _, line := range addedLines {
@@ -97,6 +94,7 @@ func AnalyzeCoverage(profiles []*Profile, addedLinesByFile map[string][]int) *An
 			} else {
 				uncoveredLines = append(uncoveredLines, line)
 			}
+			result.DiffAddedLines++
 		}
 
 		// Only add to result if there are uncovered lines
