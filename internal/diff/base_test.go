@@ -207,11 +207,16 @@ func TestGitBaseDiffSource_WithExplicitCommit_BranchNames(t *testing.T) {
 	exec.Command("git", "-C", tmpDir, "config", "user.email", "test@test.com").Run()
 	exec.Command("git", "-C", tmpDir, "config", "user.name", "Test User").Run()
 
-	// Create initial commit on main
+	// Create initial commit
 	err := os.WriteFile(filepath.Join(tmpDir, "file.go"), []byte("package main\n"), 0644)
 	require.NoError(t, err)
 	exec.Command("git", "-C", tmpDir, "add", ".").Run()
 	exec.Command("git", "-C", tmpDir, "commit", "-m", "initial commit").Run()
+
+	// Get the current branch name (could be main, master, etc.)
+	out, err := exec.Command("git", "-C", tmpDir, "rev-parse", "--abbrev-ref", "HEAD").Output()
+	require.NoError(t, err)
+	baseBranch := strings.TrimSpace(string(out))
 
 	// Create feature branch and add commit
 	exec.Command("git", "-C", tmpDir, "checkout", "-b", "feature").Run()
@@ -220,8 +225,8 @@ func TestGitBaseDiffSource_WithExplicitCommit_BranchNames(t *testing.T) {
 	exec.Command("git", "-C", tmpDir, "add", ".").Run()
 	exec.Command("git", "-C", tmpDir, "commit", "-m", "add foo").Run()
 
-	// Test diff between main and feature branches
-	source := NewGitBaseDiffSource("main", "feature", tmpDir)
+	// Test diff between base and feature branches
+	source := NewGitBaseDiffSource(baseBranch, "feature", tmpDir)
 	output, err := source.GetDiff(context.Background())
 
 	require.NoError(t, err)
