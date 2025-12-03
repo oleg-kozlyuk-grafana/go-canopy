@@ -40,7 +40,13 @@ Usage:
   canopy [flags]
 
 This command analyzes coverage files in the specified directory and compares them
-against the current git diff to highlight uncovered lines in your changes.`,
+against the current git diff to highlight uncovered lines in your changes.
+
+Diff modes:
+  - Default: Compares against current working directory changes (git diff)
+  - --base <ref>: Compares base ref to HEAD (git diff <base>..HEAD)
+  - --base <ref> --commit <ref>: Compares two refs (git diff <base>..<commit>)
+  - --commit <sha>: Shows changes for a specific commit (git diff-tree <sha>)`,
 	RunE: run,
 }
 
@@ -61,22 +67,23 @@ func init() {
 	// Define flags
 	rootCmd.Flags().StringVar(&coveragePath, "coverage", ".coverage", "Directory containing coverage files")
 	rootCmd.Flags().StringVar(&format, "format", "Text", "Output format (Text, Markdown, GitHubAnnotations)")
-	rootCmd.Flags().StringVar(&baseRef, "base", "", "Analyze diff against base ref (uses git diff <base>..HEAD)")
-	rootCmd.Flags().StringVar(&commitSHA, "commit", "", "Analyze diff for a specific commit (uses git diff-tree)")
+	rootCmd.Flags().StringVar(&baseRef, "base", "", "Base reference to compare from (can be combined with --commit)")
+	rootCmd.Flags().StringVar(&commitSHA, "commit", "", "Commit reference to compare to (defaults to HEAD when used with --base)")
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	// Create appropriate DiffSource based on flags (hierarchy-based selection)
+	// Create appropriate DiffSource based on flags
 	var diffSource diff.DiffSource
 
 	if baseRef != "" {
-		// --base flag takes highest priority (for PR context)
-		diffSource = diff.NewGitBaseDiffSource(baseRef, "")
+		// --base flag: compare base to commit (defaults to HEAD if commit not specified)
+		// Supports both: --base <ref> and --base <ref> --commit <ref>
+		diffSource = diff.NewGitBaseDiffSource(baseRef, commitSHA, "")
 	} else if commitSHA != "" {
-		// --commit flag for single commit analysis
+		// --commit flag only: single commit analysis
 		diffSource = diff.NewGitCommitDiffSource(commitSHA, "")
 	} else {
-		// Default: use local git diff
+		// Default: use local git diff (working directory changes)
 		diffSource = diff.NewLocalDiffSource("")
 	}
 
