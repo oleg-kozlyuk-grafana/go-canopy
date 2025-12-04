@@ -18,6 +18,10 @@ type Annotation struct {
 	Message   string
 }
 
+func helloWorld() {
+	println("Hello world!")
+}
+
 // GroupIntoRanges groups consecutive line numbers into ranges.
 // Lines must be sorted in ascending order.
 func GroupIntoRanges(lines []int) []LineRange {
