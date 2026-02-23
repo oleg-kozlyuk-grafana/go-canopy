@@ -3,6 +3,7 @@ package coverage
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -360,6 +361,24 @@ index 1234567..abcdefg 100644
 	// Lines are tracked even without valid hunk (starting from line 0)
 	// This is acceptable edge case behavior
 	assert.NotEmpty(t, fileDiffs[0].AddedLines)
+}
+
+func TestParseDiff_LongLines(t *testing.T) {
+	// Lines exceeding bufio.Scanner's default 64KB limit (e.g. minified JSON in diffs)
+	longLine := "+" + strings.Repeat("x", 100*1024) // 100KB line
+	diffData := []byte("diff --git a/big.json b/big.json\n" +
+		"index 1234567..abcdefg 100644\n" +
+		"--- a/big.json\n" +
+		"+++ b/big.json\n" +
+		"@@ -0,0 +1 @@\n" +
+		longLine + "\n")
+
+	fileDiffs, err := ParseDiff(diffData)
+	require.NoError(t, err)
+	require.Len(t, fileDiffs, 1)
+
+	assert.Equal(t, "big.json", fileDiffs[0].NewName)
+	assert.Equal(t, []int{1}, fileDiffs[0].AddedLines)
 }
 
 func TestParseDiff_ContextLines(t *testing.T) {

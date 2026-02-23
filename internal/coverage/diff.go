@@ -33,6 +33,7 @@ func ParseDiff(diffData []byte) ([]*FileDiff, error) {
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(diffData))
+	scanner.Buffer(make([]byte, 64*1024), 10*1024*1024)
 	var fileDiffs []*FileDiff
 	var currentDiff *FileDiff
 	var currentLine int // Track the current line number in the new file
