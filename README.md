@@ -7,7 +7,6 @@ Canopy is a Go code coverage analysis tool that allows to highlight uncovered li
 - **Local Coverage Analysis**: Analyze coverage files against your git diff
 - **Multiple Diff Modes**: Analyze uncommitted changes, commits, or PR branches
 - **Flexible Output**: Text, Markdown, or GitHub Annotations format
-- **GitHub Integration**: Automated PR check runs and comments (via webhook handlers)
 - **Simple CLI**: Easy to use with sensible defaults
 
 ## Quickstart
@@ -134,16 +133,6 @@ canopy --coverage /path/to/coverage
 
 Canopy will merge all `.out` files found in the specified directory.
 
-## GitHub Integration
-
-Canopy can also run as a GitHub webhook handler to automatically:
-- Process coverage from GitHub Actions workflows
-- Create check runs on PRs
-- Post coverage comments with before/after comparison
-- Fail checks if coverage decreases
-
-See [CLAUDE.md](CLAUDE.md) for development setup and [SPEC.md](SPEC.md) for architecture details.
-
 ## Common Workflows
 
 ### Local Development
@@ -178,6 +167,9 @@ canopy --coverage .coverage --format Text
     canopy --coverage .coverage --base ${{ github.base_ref }} --format GitHubAnnotations
 ```
 
+When run with `--format GitHubAnnotations`, Canopy emits `::notice file=…,line=…::…`
+workflow commands that GitHub Actions renders as PR annotations on the changed lines.
+
 ## Version Information
 
 Check your installed version:
@@ -188,10 +180,7 @@ canopy version
 
 ## Contributing
 
-For development setup and contribution guidelines, see:
-- [CLAUDE.md](CLAUDE.md) - Development guide and architecture
-- [PLAN.md](PLAN.md) - Implementation plan and progress
-- [SPEC.md](SPEC.md) - Technical specification
+For development setup and contribution guidelines, see [CLAUDE.md](CLAUDE.md).
 
 ### Development Setup
 
@@ -219,4 +208,3 @@ See [LICENSE](LICENSE) file for details.
 For issues, questions, or contributions:
 - Open an issue on GitHub
 - See [CLAUDE.md](CLAUDE.md) for architecture details
-- Check [SPEC.md](SPEC.md) for feature specifications
