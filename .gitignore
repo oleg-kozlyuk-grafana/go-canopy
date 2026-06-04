@@ -5,3 +5,4 @@
 
 # Coverage artifacts
 .coverage
+/coverage.out
